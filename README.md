@@ -22,6 +22,12 @@ AI-powered Telegram bot for personal expense tracking with receipt parsing, anal
 - SQLite
 - dotenv
 - requests
+- Linux VPS (Ubuntu)
+- systemd
+
+## Deployment
+
+The bot is deployed on a Linux VPS (Ubuntu 24.04) and runs 24/7 using a systemd service.
 
 ## Project Structure
 
