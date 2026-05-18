@@ -149,7 +149,11 @@ try:
                         '/export — download your data\n'
                         '/help — show commands\n\n'
                         
-                        '📷 You can also send a receipt photo'
+                        '📷 You can also send a receipt photo\n\n'
+
+                        '🧪 ExpensesAI is currently in beta.\n'
+                        'Feedback helps improve the bot:\n'
+                        '@grindbtco'
                     )
                 }
                 
