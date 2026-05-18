@@ -27,7 +27,17 @@ AI-powered Telegram bot for personal expense tracking with receipt parsing, anal
 
 ## Deployment
 
-The bot is deployed on a Linux VPS (Ubuntu 24.04) and runs 24/7 using a systemd service.
+The bot is deployed on an Ubuntu VPS and runs 24/7 using:
+
+- Linux VPS
+- Python virtual environment (venv)
+- systemd service
+- GitHub-based deployment workflow
+
+Production setup includes:
+- environment variable management with `.env`
+- persistent SQLite storage
+- automatic service restart via systemd
 
 ## Project Structure
 
