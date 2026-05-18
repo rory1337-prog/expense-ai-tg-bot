@@ -33,7 +33,7 @@ The bot is deployed on a Linux VPS (Ubuntu 24.04) and runs 24/7 using a systemd 
 
 ```text
 expensesAI/
-├── bot.py              # Main Telegram bot loop and command handlin
+├── bot.py              # Main Telegram bot loop and command handling
 ├── telegram_api.py     # Telegram API communication
 ├── ai.py               # OpenAI receipt parsing
 ├── database.py         # SQLite database operations
@@ -116,7 +116,7 @@ python3 bot.py
 ## Roadmap
 
 - Docker support
-- VPS deployment
+- Docker containerization
 - Inline keyboard UI
 - PostgreSQL migration
 - Unit tests with pytest
