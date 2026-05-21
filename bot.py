@@ -12,7 +12,7 @@ from telegram_api import (
 from config import UPDATE_FILE, CURRENCY
 
 from database import (
-    save_expense,
+    save_entry,
     delete_last_entry,
     delete_entry_by_number,
     update_entry_by_number
@@ -82,7 +82,7 @@ try:
                     receipt_file.unlink(missing_ok=True)
 
                     if expense is not None:
-                        saved = save_expense(expense, chat_id)
+                        saved = save_entry(expense, chat_id)
 
                         if saved:
                             payload = {
@@ -212,7 +212,7 @@ try:
                         'text': 'Incorrect format. Use: /income salary 3000'  
                     }
                 else:
-                    saved = save_expense(income, chat_id)
+                    saved = save_entry(income, chat_id)
 
                     if saved:
                         payload = {
@@ -362,7 +362,7 @@ try:
                 expense = parse_expense(text)
                 
                 if expense is not None:
-                    saved = save_expense(expense, chat_id)
+                    saved = save_entry(expense, chat_id)
                     
                     if saved:
                         payload = {

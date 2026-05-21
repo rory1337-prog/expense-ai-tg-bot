@@ -31,7 +31,7 @@ def init_db():
     conn.close()
 
 # ===== SAVE OPERATIONS =====
-def save_expense(expense, chat_id):
+def save_entry(entry, chat_id):
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -41,11 +41,11 @@ def save_expense(expense, chat_id):
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
             chat_id,
-            expense["name"],
-            expense["amount"],
-            expense["category"],
-            expense["type"],
-            expense["created_at"]
+            entry["name"],
+            entry["amount"],
+            entry["category"],
+            entry["type"],
+            entry["created_at"]
         ))
 
         conn.commit()
