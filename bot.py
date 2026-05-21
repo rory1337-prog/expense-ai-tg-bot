@@ -262,9 +262,16 @@ try:
             elif text.startswith('/edit '):
                 try:
                     parts = text.split()
+                    
+                    if len(parts) < 4:
+                        raise ValueError
+                    
                     number = int(parts[1])
-                    name = parts[2]
-                    amount = float(parts[3])
+                    amount = float(parts[-1])
+                    name = ' '.join(parts[2:-1]).strip()
+
+                    if amount <= 0 or not name:
+                        raise ValueError
 
                     updated = update_entry_by_number(chat_id, number, name, amount)
 

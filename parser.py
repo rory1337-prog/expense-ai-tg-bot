@@ -72,6 +72,10 @@ def parse_expense(text):
             return None
         
         amount = float(parts[-1])
+
+        if amount <= 0:
+            return None
+        
         name = " ".join(parts[:-1]).strip()
 
         if not name:
@@ -84,7 +88,7 @@ def parse_expense(text):
             'type': 'expense',
             'created_at': datetime.now().replace(microsecond=0).isoformat()
         }
-    except Exception:
+    except (ValueError, IndexError):
         return None
     
 # ===== INCOME PARSING =====
@@ -96,6 +100,10 @@ def parse_income(text):
             return None
         
         amount = float(parts[-1])
+
+        if amount <= 0:
+            return None
+        
         name = " ".join(parts[1:-1]).strip()
 
         if not name:
@@ -108,5 +116,5 @@ def parse_income(text):
             "type": "income",
             "created_at": datetime.now().replace(microsecond=0).isoformat()
         }
-    except Exception:
+    except (ValueError, IndexError):
         return None
