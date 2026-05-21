@@ -1,6 +1,8 @@
 # ExpensesAI Telegram Bot
 
 AI-powered Telegram bot for personal expense tracking with receipt parsing, analytics, reports, and data export.
+GitHub repository:
+https://github.com/rory1337-prog/expense-ai-tg-bot?
 
 ## Features
 
@@ -13,6 +15,9 @@ AI-powered Telegram bot for personal expense tracking with receipt parsing, anal
 - Show analytics with top categories and recent expenses
 - Export user data as a text file
 - Edit and delete saved expenses
+- Modular command handlers
+- Structured logging
+- Long polling with timeout
 
 ## Tech Stack
 
@@ -24,7 +29,6 @@ AI-powered Telegram bot for personal expense tracking with receipt parsing, anal
 - requests
 - Docker
 - Linux VPS (Ubuntu)
-- systemd
 
 ## Deployment
 
@@ -32,7 +36,7 @@ The bot is deployed on an Ubuntu VPS and containerized using Docker.
 
 Production setup includes:
 - Docker containerization
-- automatic container restart
+- automatic Docker container restart
 - environment variable management with `.env`
 - persistent SQLite storage
 - GitHub-based deployment workflow
@@ -40,15 +44,18 @@ Production setup includes:
 ## Project Structure
 
 ```text
-expensesAI/
-├── bot.py              # Main Telegram bot loop and command handling
+expense-ai-tg-bot/
+├── bot.py              # Main bot loop, update handling, routing
+├── handlers.py         # Command handlers and message processing logic
 ├── telegram_api.py     # Telegram API communication
 ├── ai.py               # OpenAI receipt parsing
 ├── database.py         # SQLite database operations
 ├── parser.py           # Text parsing and category detection
 ├── reports.py          # Reports, analytics, export
 ├── config.py           # Environment variables and app config
+├── Dockerfile
 ├── requirements.txt
+├── expenses.db
 └── README.md
 ```
 
@@ -57,14 +64,15 @@ expensesAI/
 ```text
 Telegram User
     ↓
-bot.py
+bot.py                 # receives updates and routes messages
     ↓
-telegram_api.py  → Telegram API
+handlers.py            # command and message handlers
     ↓
-parser.py        → Text expense/income parsing
-ai.py            → Receipt photo parsing with OpenAI
-database.py      → SQLite persistence
-reports.py       → Reports, analytics, export
+parser.py              # text expense/income parsing
+ai.py                  # receipt photo parsing with OpenAI
+database.py            # SQLite persistence
+reports.py             # reports, analytics, export
+telegram_api.py        # Telegram API requests
 ```
 
 ## Example Usage
@@ -91,7 +99,6 @@ Supported extraction:
 - expense name
 - amount
 - category
-- timestamp
 
 ## Setup
 
@@ -123,8 +130,6 @@ python3 bot.py
 
 ## Roadmap
 
-- Docker support
-- Docker containerization
 - Inline keyboard UI
 - PostgreSQL migration
 - Unit tests with pytest
@@ -132,14 +137,15 @@ python3 bot.py
 - Budget limits and alerts
 - Currency selection
 - Multi-user settings
+- Webhook-based deployment
 
 ## Status
 
-MVP completed.
+Production MVP deployed.
 
 Current focus:
-- architecture refactoring
-- deployment
-- testing
+- command handler architecture
 - UX improvements
+- testing
 - AI features
+- database scalability
