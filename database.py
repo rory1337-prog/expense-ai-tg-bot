@@ -1,7 +1,10 @@
 # ===== IMPORTS =====
+import logging
 import sqlite3
 from config import DB_FILE
 from parser import detect_category
+
+logger = logging.getLogger(__name__)
 
 # ===== DATABASE CONNECTION =====
 def get_connection():
@@ -49,8 +52,8 @@ def save_expense(expense, chat_id):
         conn.close()
         return True
 
-    except Exception as e:
-        print("SAVE EXPENSE ERROR:", e)
+    except Exception:
+        logger.exception("Failed to save entry")
         return False
     
 # ===== GET OPERATIONS =====

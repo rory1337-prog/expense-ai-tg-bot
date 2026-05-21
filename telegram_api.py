@@ -1,4 +1,5 @@
 # ===== IMPORTS =====
+import logging
 import requests
 from config import (
     BOT_TOKEN,
@@ -6,6 +7,8 @@ from config import (
     TELEGRAM_DOCUMENT_URL
 )
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # ===== SEND MESSAGE =====
 def send_message(chat_id,text):
@@ -40,8 +43,8 @@ def get_updates(offset):
         response.raise_for_status()
         return response.json()
     
-    except Exception as e:
-        print('GET UPDATES ERROR:', e)
+    except Exception:
+        logger.exception('Get updates failed')
         return {'result': []}
     
 # ===== DOWNLOAD PHOTO =====

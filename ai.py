@@ -1,4 +1,5 @@
 # ===== IMPORTS =====
+import logging
 import json
 import base64
 import requests
@@ -7,6 +8,7 @@ from datetime import datetime
 from config import OPENAI_API_KEY
 from parser import detect_category
 
+logger = logging.getLogger(__name__)
 # ===== AI RECEIPT PARSING =====
 def ai_parse_photo(image_path):
     if not OPENAI_API_KEY:
@@ -133,6 +135,6 @@ def ai_parse_photo(image_path):
 
         return expense
 
-    except Exception as e:
-        print("AI PARSE ERROR:", e)
+    except Exception:
+        logger.exception("AI receipt parsing failed")
         return None

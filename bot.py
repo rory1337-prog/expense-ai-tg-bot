@@ -1,5 +1,6 @@
 # ===== IMPORTS =====
 import time
+import logging
 
 from telegram_api import (
     send_message,
@@ -29,6 +30,11 @@ from reports import (
     export_data
 )
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(message)s'
+)
+logger = logging.getLogger(__name__)
 # ===== TELEGRAM UPDATES =====
 offset = None
 if UPDATE_FILE.exists():
@@ -45,7 +51,7 @@ try:
         data = get_updates(offset)
 
         if not data["result"]:
-            time.sleep(0.5)
+            time.sleep(0.1)
             continue
 
         for update in data["result"]:
@@ -94,8 +100,8 @@ try:
                             'text': 'Could not read receipt'
                         }
 
-                except Exception as e:
-                    print("PHOTO PROCESSING ERROR:", e)
+                except Exception:
+                    logger.exception('Photo processing failed')
                     payload = {
                         'chat_id': chat_id,
                         'text': 'Error: could not process photo'
@@ -385,5 +391,5 @@ try:
         time.sleep(0.1)
 
 except KeyboardInterrupt:
-    print("Bot Stopped")
+    logger.info('Bot stopped')
 
