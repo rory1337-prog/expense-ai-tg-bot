@@ -114,7 +114,7 @@ def ai_parse_photo(image_path):
 
         expense["name"] = str(expense["name"]).strip()
         expense["amount"] = float(expense["amount"])
-        expense["category"] = detect_category(expense["name"])
+        expense["category"] = str(expense["category"]).strip().lower()
 
         allowed = {
             "food",
@@ -128,8 +128,12 @@ def ai_parse_photo(image_path):
             "education",
             "other"
         }
-        if expense["category"] not in allowed:
-            expense["category"] = "other"
+        if (
+            expense["category"] not in allowed
+            or expense["category"] == "other"
+        ):
+            expense["category"] = detect_category(expense['name'])
+        
         expense['type'] = 'expense'
         expense['created_at'] = datetime.now().replace(microsecond=0).isoformat()
 
