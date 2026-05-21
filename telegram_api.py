@@ -29,7 +29,9 @@ def send_document(chat_id, file_path):
 def get_updates(offset):
     try:
         url = f'https://api.telegram.org/bot{BOT_TOKEN}/getUpdates'
-        params = {}
+        params = {
+            'timeout': 30
+        }
 
         if offset is not None:
             params['offset'] = offset

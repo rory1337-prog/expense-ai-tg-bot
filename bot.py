@@ -382,7 +382,7 @@ try:
                 f.write(str(update_id))
             offset = update_id + 1
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
     print("Bot Stopped")
