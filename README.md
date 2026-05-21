@@ -2,7 +2,7 @@
 
 AI-powered Telegram bot for personal expense tracking with receipt parsing, analytics, reports, and data export.
 
-GitHub repository: https://github.com/rory1337-prog/expense-ai-tg-bot?
+GitHub repository: https://github.com/rory1337-prog/expense-ai-tg-bot
 
 ## Features
 
