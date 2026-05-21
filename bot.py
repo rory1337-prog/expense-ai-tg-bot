@@ -187,6 +187,7 @@ def handle_delete_last(chat_id):
         'text': f'Deleted: {deleted["name"]} ({CURRENCY}{deleted["amount"]}) [{deleted["category"]}]'
     }
 
+# ===== COMMAND: DELETE BY NUMBER =====
 def handle_delete_by_number(chat_id, text):
     try:
         parts = text.split()
@@ -280,6 +281,47 @@ def handle_export(chat_id):
     export_file.unlink(missing_ok=True)
     return None
 
+# ===== PHOTO HANDLER =====
+def handle_photo_message(chat_id, message, update_id):
+    try:
+        photos = message['photo']
+        largest_photo = photos[-1]
+        file_id = largest_photo['file_id']
+
+        receipt_file = download_photo(file_id, update_id)
+
+        if receipt_file is None:
+            raise RuntimeError('Could not download photo')
+        
+        expense = ai_parse_photo(receipt_file)
+        receipt_file.unlink(missing_ok=True)
+
+        if expense is None:
+            return {
+                'chat_id': chat_id,
+                'text': 'Could not read receipt'
+            }
+        
+        saved = save_entry(expense, chat_id)
+        
+        if saved:
+            return {
+                'chat_id': chat_id,
+                'text': f'Saved: {expense["name"]} ({CURRENCY}{expense["amount"]:.2f}) [{expense["category"]}]'
+            }
+        
+        return {
+            'chat_id': chat_id,
+            'text': 'Error: could not save parsed receipt'
+        }
+    
+    except Exception:
+        logger.exception('Photo processing failed')
+        return {
+            'chat_id': chat_id,
+            'text': 'Error: could not process photo'
+        }
+
 # ===== COMMAND HANDLERS =====
 COMMAND_HANDLERS = {
     '/start': handle_start,
@@ -293,6 +335,10 @@ COMMAND_HANDLERS = {
     '/delete last': handle_delete_last,
 }
 # ===== TELEGRAM UPDATES =====
+def save_offset(update_id):
+    with open(UPDATE_FILE, 'w') as f:
+        f.write(str(update_id))
+
 offset = None
 if UPDATE_FILE.exists():
     with open(UPDATE_FILE, 'r') as f:
@@ -315,8 +361,7 @@ try:
             message = update.get("message")
 
             if not message:
-                with open(UPDATE_FILE, 'w') as f:
-                    f.write(str(update_id))
+                save_offset(update_id)
                 offset = update_id + 1
                 continue
 
@@ -324,50 +369,11 @@ try:
 
             # ===== PHOTO MESSAGE =====
             if 'photo' in message:
-                try:
-                    photos = message['photo']
-                    largest_photo = photos[-1]
-                    file_id = largest_photo['file_id']
+                payload = handle_photo_message(chat_id, message, update_id)
 
-                    receipt_file = download_photo(file_id, update_id)
+                send_message(chat_id, payload['text'])
 
-                    if receipt_file is None:
-                        raise Exception("Could not download photo")
-
-                    expense = ai_parse_photo(receipt_file)
-                    receipt_file.unlink(missing_ok=True)
-
-                    if expense is not None:
-                        saved = save_entry(expense, chat_id)
-
-                        if saved:
-                            payload = {
-                                'chat_id': chat_id,
-                                'text': f'Saved: {expense["name"]} ({CURRENCY}{expense["amount"]:.2f}) [{expense["category"]}]'
-                            }
-                        else:
-                            payload = {
-                                'chat_id': chat_id,
-                                'text': 'Error: could not save parsed receipt'
-                            }
-                    else:
-                        payload = {
-                            'chat_id': chat_id,
-                            'text': 'Could not read receipt'
-                        }
-
-                except Exception:
-                    logger.exception('Photo processing failed')
-                    payload = {
-                        'chat_id': chat_id,
-                        'text': 'Error: could not process photo'
-                    }
-
-                send_message(chat_id, payload["text"])
-
-                with open(UPDATE_FILE, 'w') as f:
-                    f.write(str(update_id))
-
+                save_offset(update_id)
                 offset = update_id + 1
                 continue
             
@@ -379,8 +385,7 @@ try:
                 }
                 send_message(chat_id, payload["text"])
 
-                with open(UPDATE_FILE, 'w') as f:
-                    f.write(str(update_id))
+                save_offset(update_id)
                 offset = update_id + 1
                 continue
             
@@ -407,8 +412,7 @@ try:
             elif text == '/export':
                 handle_export(chat_id)
 
-                with open(UPDATE_FILE, 'w') as f:
-                    f.write(str(update_id))
+                save_offset(update_id)
                 offset = update_id + 1
                 continue
                
@@ -418,8 +422,7 @@ try:
 
             send_message(chat_id, payload["text"])
 
-            with open(UPDATE_FILE, 'w') as f:
-                f.write(str(update_id))
+            save_offset(update_id)
             offset = update_id + 1
 
         time.sleep(0.1)
