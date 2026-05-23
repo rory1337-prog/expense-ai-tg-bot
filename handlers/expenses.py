@@ -1,24 +1,26 @@
 from aiogram import Router
 from aiogram.types import Message
 
-from database import save_entry
+from database import save_entry, get_user_settings
 from parser import parse_expense, parse_income
 
 router = Router()
 
-@router.message(lambda message: message.text and message.text.startswith('income '))
+@router.message(lambda message: message.text and message.text.lower().startswith("income "))
 async def income_handler(message: Message):
     entry = parse_income(message.text)
 
     if not entry:
         await message.answer("Could not parse income. Try: income salary 3000")
         return
-    
+
     ok = save_entry(entry, message.chat.id)
+    settings = get_user_settings(message.chat.id)
+    currency = settings["currency"]
 
     if ok:
         await message.answer(
-            f"✅ Income saved:\n{entry['name']} — {entry['amount']} PLN"
+            f"✅ Income saved:\n{entry['name']} — {entry['amount']} {currency}"
         )
     else:
         await message.answer("❌ Failed to save income.")
@@ -42,10 +44,12 @@ async def expense_text_handler(message: Message):
         return
     
     ok = save_entry(entry, message.chat.id)
+    settings = get_user_settings(message.chat.id)
+    currency = settings["currency"]
 
     if ok:
         await message.answer(
-            f"✅ Expense saved:\n{entry['name']} — {entry['amount']} PLN\nCategory: {entry['category']}"
+            f"✅ Expense saved:\n{entry['name']} — {entry['amount']} {currency}\nCategory: {entry['category']}"
         )
     else:
         await message.answer("❌ Failed to save expense.")

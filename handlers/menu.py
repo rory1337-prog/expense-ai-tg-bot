@@ -22,6 +22,4 @@ async def edit_handler(message: Message):
         reply_markup=build_edit_menu(entries)
     )
 
-@router.message(lambda message: message.text == "⚙️ Settings")
-async def settings_handler(message: Message):
-    await message.answer("Settings menu coming soon ⚙️")
+

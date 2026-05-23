@@ -1,12 +1,12 @@
 from aiogram import Router
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
-from aiogram.fsm.context import FSMContext  
+from aiogram.fsm.context import FSMContext
 
-from database import delete_entry_by_id
-from database import update_entry_by_id
+from database import delete_entry_by_id, update_entry_by_id, get_user_settings
 from states.edit_states import EditEntry
 
 router = Router()
+
 
 @router.callback_query(lambda c: c.data.startswith("edit_select:"))
 async def edit_select_callback(callback: CallbackQuery):
@@ -27,20 +27,24 @@ async def edit_select_callback(callback: CallbackQuery):
     )
     await callback.answer()
 
+
 @router.callback_query(lambda c: c.data.startswith("delete_entry:"))
 async def delete_entry_callback(callback: CallbackQuery):
     entry_id = int(callback.data.split(":")[1])
 
     deleted = delete_entry_by_id(callback.message.chat.id, entry_id)
+    settings = get_user_settings(callback.message.chat.id)
+    currency = settings["currency"]
 
     if deleted:
         await callback.message.answer(
-            f"🗑 Deleted:\n{deleted['name']} — {deleted['amount']} PLN"
+            f"🗑 Deleted:\n{deleted['name']} — {deleted['amount']} {currency}"
         )
     else:
         await callback.message.answer("❌ Entry not found.")
 
     await callback.answer()
+
 
 @router.callback_query(lambda c: c.data.startswith("edit_entry:"))
 async def edit_entry_callback(callback: CallbackQuery, state: FSMContext):
@@ -75,15 +79,13 @@ async def process_new_entry_value(message: Message, state: FSMContext):
 
     data = await state.get_data()
     entry_id = data["entry_id"]
-    print("FSM EDIT TRIGGERED")
-    print("message:", message.text)
-    print("entry_id:", entry_id)
 
     ok = update_entry_by_id(message.chat.id, entry_id, name, amount)
-    print("update ok:", ok)
+    settings = get_user_settings(message.chat.id)
+    currency = settings["currency"]
 
     if ok:
-        await message.answer(f"✅ Updated:\n{name} — {amount} PLN")
+        await message.answer(f"✅ Updated:\n{name} — {amount} {currency}")
     else:
         await message.answer("❌ Failed to update entry.")
 

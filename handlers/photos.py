@@ -5,7 +5,7 @@ from aiogram import Router
 from aiogram.types import Message
 
 from ai import ai_parse_photo
-from database import save_entry
+from database import save_entry, get_user_settings
 
 router = Router()
 
@@ -33,10 +33,12 @@ async def photo_handler(message: Message):
         return
     
     ok = save_entry(entry, message.chat.id)
+    settings = get_user_settings(message.chat.id)
+    currency = settings["currency"]
 
     if ok:
         await message.answer(
-            f"✅ Receipt saved:\n{entry['name']} — {entry['amount']} PLN\nCategory: {entry['category']}"
+            f"✅ Receipt saved:\n{entry['name']} — {entry['amount']} {currency}\nCategory: {entry['category']}"
         )
     else:
         await message.answer("❌ Failed to save receipt.")
