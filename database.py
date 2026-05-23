@@ -131,6 +131,41 @@ def delete_entry_by_number(chat_id, number):
 
     return entry_to_delete
 
+def delete_entry_by_id(chat_id, entry_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, name, amount, category, type, created_at
+        FROM entries
+        WHERE chat_id = ? AND id = ?
+    """, (chat_id, entry_id))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return None
+
+    deleted_entry = {
+        "id": row[0],
+        "name": row[1],
+        "amount": row[2],
+        "category": row[3],
+        "type": row[4],
+        "created_at": row[5]
+    }
+
+    cursor.execute("""
+        DELETE FROM entries
+        WHERE chat_id = ? AND id = ?
+    """, (chat_id, entry_id))
+
+    conn.commit()
+    conn.close()
+
+    return deleted_entry
+
 # ===== UPDATE OPERATIONS =====
 def update_entry_by_number(chat_id, number, name, amount):
     entries = get_user_entries(chat_id)
