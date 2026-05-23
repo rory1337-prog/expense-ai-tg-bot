@@ -1,7 +1,6 @@
 # ===== IMPORTS =====
 from datetime import datetime
 from pathlib import Path
-import sqlite3
 
 from config import CURRENCY
 from database import get_user_entries, get_connection
