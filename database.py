@@ -197,5 +197,22 @@ def update_entry_by_number(chat_id, number, name, amount):
         'category': category
     }
 
+def update_entry_by_id(chat_id, entry_id, name, amount):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE entries
+        SET name = ?, amount = ?
+        WHERE chat_id = ? AND id = ?
+    """, (name, amount, chat_id, entry_id))
+
+    updated = cursor.rowcount
+
+    conn.commit()
+    conn.close()
+
+    return updated > 0
+
 # ===== DATABASE STARTUP =====
 init_db()
