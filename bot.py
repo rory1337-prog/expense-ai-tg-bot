@@ -1,124 +1,61 @@
 # ===== IMPORTS =====
-import time
-import logging
+import asyncio
+import os
 
-from handlers import (
-    COMMAND_HANDLERS,
-    handle_income,
-    handle_delete_by_number,
-    handle_edit,
-    handle_export,
-    handle_expense_text,
-    handle_photo_message
+from aiogram import Bot, Dispatcher
+from aiogram.filters import CommandStart
+from aiogram.types import Message 
+from dotenv import load_dotenv
+from database import init_db
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv('BOTTOKEN')
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+main_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="➕ Add expense")],
+        [KeyboardButton(text="📊 Reports"), KeyboardButton(text="✏️ Edit")],
+        [KeyboardButton(text="⚙️ Settings")]
+    ],
+    resize_keyboard=True
 )
 
-from telegram_api import (
-    send_message,
-    get_updates
-)
+@dp.message(CommandStart())
+async def start_handler(message: Message):
+    await message.answer(
+        "💸 ExpensesAI\n\nChoose an action:",
+        reply_markup=main_menu
+    )
 
-from config import UPDATE_FILE
+@dp.message(lambda message: message.text == "➕ Add expense")
+async def add_expense_handler(message: Message):
+    await message.answer("Send expense like:\ncoffee 15")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s'
-)
 
-logger = logging.getLogger(__name__)
+@dp.message(lambda message: message.text == "📊 Reports")
+async def reports_handler(message: Message):
+    await message.answer("Reports menu coming soon 📊")
 
-# ===== TELEGRAM UPDATES =====
-def save_offset(update_id):
-    with open(UPDATE_FILE, 'w') as f:
-        f.write(str(update_id))
 
-offset = None
-if UPDATE_FILE.exists():
-    with open(UPDATE_FILE, 'r') as f:
-        last_update_id = int(f.read())
-        offset = last_update_id + 1
-else:
-    last_update_id = None
+@dp.message(lambda message: message.text == "✏️ Edit")
+async def edit_handler(message: Message):
+    await message.answer("Edit menu coming soon ✏️")
 
-# ===== MAIN LOOP =====
-try:
-    while True:
-        data = get_updates(offset)
 
-        if not data["result"]:
-            time.sleep(0.1)
-            continue
+@dp.message(lambda message: message.text == "⚙️ Settings")
+async def settings_handler(message: Message):
+    await message.answer("Settings menu coming soon ⚙️")
 
-        for update in data["result"]:
-            update_id = update["update_id"]
-            message = update.get("message")
+async def main():
+    init_db()
+    print('Database initialized...')
+    print('Bot started...')
+    await dp.start_polling(bot)
 
-            if not message:
-                save_offset(update_id)
-                offset = update_id + 1
-                continue
-
-            chat_id = str(message['chat']['id'])
-
-            # ===== PHOTO MESSAGE =====
-            if 'photo' in message:
-                payload = handle_photo_message(chat_id, message, update_id)
-
-                send_message(chat_id, payload['text'])
-
-                save_offset(update_id)
-                offset = update_id + 1
-                continue
-            
-            # ===== NON-TEXT MESSAGE =====
-            elif 'text' not in message:
-                payload = {
-                    'chat_id': chat_id,
-                    'text': 'Only text and photo messages are supported'
-                }
-                send_message(chat_id, payload["text"])
-
-                save_offset(update_id)
-                offset = update_id + 1
-                continue
-            
-            # ===== TEXT MESSAGE =====
-            text = message['text']
-
-            # ===== COMMANDS =====
-            if text in COMMAND_HANDLERS:
-                payload = COMMAND_HANDLERS[text](chat_id)
-                
-            # ===== COMMAND: INCOME =====       
-            elif text.startswith('/income'):
-                payload = handle_income(chat_id, text)
-            
-            # ===== COMMAND: DELETE BY NUMBER =====
-            elif text.startswith('/delete '):
-                payload = handle_delete_by_number(chat_id, text)
-            
-            # ===== COMMAND: EDIT =====
-            elif text.startswith('/edit '):
-                payload = handle_edit(chat_id, text)
-                    
-            # ===== COMMAND: EXPORT =====        
-            elif text == '/export':
-                handle_export(chat_id)
-
-                save_offset(update_id)
-                offset = update_id + 1
-                continue
-               
-            # ===== DEFAULT: PARSE EXPENSE TEXT =====    
-            else:
-                payload = handle_expense_text(chat_id, text)
-
-            send_message(chat_id, payload["text"])
-
-            save_offset(update_id)
-            offset = update_id + 1
-
-        time.sleep(0.1)
-
-except KeyboardInterrupt:
-    logger.info('Bot stopped')
-
+if __name__ == '__main__':
+    asyncio.run(main())
