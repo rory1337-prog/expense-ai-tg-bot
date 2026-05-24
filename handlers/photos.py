@@ -7,6 +7,7 @@ from aiogram.types import Message
 from ai import ai_parse_photo
 from database import save_entry, get_user_settings
 from locales import t
+from locales.categories import localize_category
 
 router = Router()
 
@@ -43,7 +44,7 @@ async def photo_handler(message: Message):
         await message.answer(
             f"{t('receipt_saved', lang)}:\n"
             f"{entry['name']} — {entry['amount']} {currency}\n"
-            f"{t('category', lang)}: {entry['category']}"
+            f"{t('category', lang)}: {localize_category(entry['category'], lang)}"
         )
     else:
         await message.answer(t("failed_save_receipt", lang))
