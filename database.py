@@ -27,6 +27,14 @@ def init_db():
         )
     ''')
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_settings (
+            chat_id TEXT PRIMARY KEY,
+            language TEXT DEFAULT 'en',
+            currency TEXT DEFAULT 'PLN'
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -131,6 +139,41 @@ def delete_entry_by_number(chat_id, number):
 
     return entry_to_delete
 
+def delete_entry_by_id(chat_id, entry_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, name, amount, category, type, created_at
+        FROM entries
+        WHERE chat_id = ? AND id = ?
+    """, (chat_id, entry_id))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return None
+
+    deleted_entry = {
+        "id": row[0],
+        "name": row[1],
+        "amount": row[2],
+        "category": row[3],
+        "type": row[4],
+        "created_at": row[5]
+    }
+
+    cursor.execute("""
+        DELETE FROM entries
+        WHERE chat_id = ? AND id = ?
+    """, (chat_id, entry_id))
+
+    conn.commit()
+    conn.close()
+
+    return deleted_entry
+
 # ===== UPDATE OPERATIONS =====
 def update_entry_by_number(chat_id, number, name, amount):
     entries = get_user_entries(chat_id)
@@ -161,6 +204,96 @@ def update_entry_by_number(chat_id, number, name, amount):
         'amount': amount,
         'category': category
     }
+
+def update_entry_by_id(chat_id, entry_id, name, amount):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE entries
+        SET name = ?, amount = ?
+        WHERE chat_id = ? AND id = ?
+    """, (name, amount, chat_id, entry_id))
+
+    updated = cursor.rowcount
+
+    conn.commit()
+    conn.close()
+
+    return updated > 0
+
+
+def get_user_settings(chat_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT language, currency
+        FROM user_settings
+        WHERE chat_id = ?
+    """, (chat_id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        cursor.execute("""
+            INSERT INTO user_settings (chat_id, language, currency)
+            VALUES (?, ?, ?)
+        """, (chat_id, "en", "PLN"))
+        conn.commit()
+        conn.close()
+        return {"language": "en", "currency": "PLN"}
+
+    conn.close()
+    return {"language": row[0], "currency": row[1]}
+
+
+def set_user_language(chat_id, language):
+    get_user_settings(chat_id)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE user_settings
+        SET language = ?
+        WHERE chat_id = ?
+    """, (language, chat_id))
+
+    conn.commit()
+    conn.close()
+
+
+def set_user_currency(chat_id, currency):
+    get_user_settings(chat_id)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE user_settings
+        SET currency = ?
+        WHERE chat_id = ?
+    """, (currency, chat_id))
+
+    conn.commit()
+    conn.close()
+
+
+def ensure_user_settings(chat_id, language="en", currency="PLN"):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO user_settings (chat_id, language, currency)
+        VALUES (?, ?, ?)
+        """,
+        (chat_id, language, currency)
+    )
+
+    conn.commit()
+    conn.close()
 
 # ===== DATABASE STARTUP =====
 init_db()

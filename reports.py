@@ -1,42 +1,62 @@
 # ===== IMPORTS =====
 from datetime import datetime
 from pathlib import Path
-import sqlite3
 
-from config import CURRENCY
-from database import get_user_entries, get_connection
+from database import get_user_entries, get_connection, get_user_settings
+from locales import t
+from locales.categories import localize_category
+
+
+def get_locale_data(chat_id):
+    settings = get_user_settings(chat_id)
+    return settings["language"], settings["currency"]
+
 
 # ===== REPORTS =====
 def build_report(chat_id):
+    lang, currency = get_locale_data(chat_id)
+
     data = get_user_entries(chat_id)
     expense_items = [item for item in data if item["type"] == "expense"]
+
+    if not expense_items:
+        return t("no_expenses", lang)
+
     total = sum(item["amount"] for item in expense_items)
 
-    report = f'Total: {CURRENCY}{total:.2f}\n\n'
+    report = f'{t("total", lang)}: {total:.2f} {currency}\n\n'
 
     for i, item in enumerate(expense_items, start=1):
-        report += f'{i}. {item["name"]} ({CURRENCY}{item["amount"]}) [{item["category"]}]\n'
+        report += (
+            f'{i}. {item["name"]} '
+            f'({item["amount"]:.2f} {currency}) '
+            f'[{localize_category(item["category"], lang)}]\n'
+        )
 
     return report
 
+
 # ===== PERIOD REPORTS =====
 def build_period_report(chat_id, period):
+    lang, currency = get_locale_data(chat_id)
+
     conn = get_connection()
     cursor = conn.cursor()
 
     if period == "today":
-        cursor.execute('''
+        title = f"📅 {t('today', lang)}"
+        query = '''
             SELECT id, name, amount, category, created_at
             FROM entries
             WHERE chat_id = ?
                 AND type = "expense"
                 AND date(created_at) = date("now", "localtime")
             ORDER BY id DESC
-        ''', (chat_id,))
-        title = '📅 Today'
+        '''
 
     elif period == "week":
-        cursor.execute('''
+        title = f"📆 {t('week', lang)}"
+        query = '''
             SELECT id, name, amount, category, created_at
             FROM entries
             WHERE chat_id = ?
@@ -44,43 +64,46 @@ def build_period_report(chat_id, period):
                 AND date(created_at) >= date("now", "localtime", "-6 days")
                 AND date(created_at) <= date("now", "localtime")
             ORDER BY id DESC
-        ''', (chat_id,))
-        title = '📆 Last 7 days'
+        '''
 
     elif period == "month":
-        cursor.execute('''
+        title = f"🗓 {t('month', lang)}"
+        query = '''
             SELECT id, name, amount, category, created_at
             FROM entries
             WHERE chat_id = ?
                 AND type = "expense"
                 AND strftime("%Y-%m", created_at) = strftime("%Y-%m", "now", "localtime")
             ORDER BY id DESC
-        ''', (chat_id,))
-        title = '🗓 This month'
+        '''
 
     else:
         conn.close()
-        return 'Unknown period'
-    
+        return t("unknown_period", lang)
+
+    cursor.execute(query, (chat_id,))
     rows = cursor.fetchall()
     conn.close()
 
     if not rows:
-        return f"{title}\n\nNo expenses found"
-    
+        return f"{title}\n\n{t('no_expenses', lang)}"
+
     total = sum(row[2] for row in rows)
 
-    text = f'{title}\n'
-    text += f'Total: {CURRENCY} {total:.2f}\n\n'
+    text = f"{title}\n"
+    text += f"{t('total', lang)}: {total:.2f} {currency}\n\n"
 
     for i, row in enumerate(rows, start=1):
         _, name, amount, category, created_at = row
-        text += f'{i}: {name} ({CURRENCY} {amount:.2f}) [{category}]\n'
+        text += f"{i}. {name} ({amount:.2f} {currency}) [{localize_category(category, lang)}]\n"
 
     return text
 
+
 # ===== BALANCE =====
 def build_balance(chat_id):
+    lang, currency = get_locale_data(chat_id)
+
     data = get_user_entries(chat_id)
 
     income_items = [item for item in data if item["type"] == "income"]
@@ -91,17 +114,19 @@ def build_balance(chat_id):
     balance = income_total - expense_total
 
     return (
-        f'Balance: {CURRENCY}{balance:.2f}\n\n'
-        f'Income: {CURRENCY}{income_total:.2f}\n'
-        f'Expenses: {CURRENCY}{expense_total:.2f}'
+        f"{t('balance', lang)}: {balance:.2f} {currency}\n\n"
+        f"{t('income', lang)}: {income_total:.2f} {currency}\n"
+        f"{t('expenses', lang)}: {expense_total:.2f} {currency}"
     )
+
 
 # ===== ANALYTICS =====
 def build_analytics(chat_id):
+    lang, currency = get_locale_data(chat_id)
+
     conn = get_connection()
     cursor = conn.cursor()
-    
-    # === TOTALS ===
+
     cursor.execute("""
         SELECT
             SUM(CASE WHEN type='income' THEN amount ELSE 0 END),
@@ -115,7 +140,6 @@ def build_analytics(chat_id):
     expense_total = expense_total or 0
     balance = income_total - expense_total
 
-    # === TODAY ===
     today = datetime.now().date().isoformat()
 
     cursor.execute('''
@@ -128,8 +152,7 @@ def build_analytics(chat_id):
 
     today_expense = cursor.fetchone()[0] or 0
 
-    # === MONTHS ===
-    month = datetime.now().strftime('%Y-%m')
+    month = datetime.now().strftime("%Y-%m")
 
     cursor.execute('''
         SELECT SUM(amount)
@@ -141,7 +164,6 @@ def build_analytics(chat_id):
 
     month_expense = cursor.fetchone()[0] or 0
 
-    # === TOP CATEGORIES ===
     cursor.execute("""
         SELECT category, SUM(amount) as total
         FROM entries
@@ -154,7 +176,6 @@ def build_analytics(chat_id):
 
     categories = cursor.fetchall()
 
-     # === LAST 5 EXPENSES ===
     cursor.execute("""
         SELECT name, amount
         FROM entries
@@ -168,33 +189,38 @@ def build_analytics(chat_id):
 
     conn.close()
 
-    text = f"📊 Analytics\n\n"
+    text = f"📊 {t('analytics', lang)}\n\n"
 
-    text += f"Balance: {CURRENCY} {balance:.2f}\n"
-    text += f"Income: {CURRENCY} {income_total:.2f}\n"
-    text += f"Expenses: {CURRENCY} {expense_total:.2f}\n\n"
+    text += f"{t('balance', lang)}: {balance:.2f} {currency}\n"
+    text += f"{t('income', lang)}: {income_total:.2f} {currency}\n"
+    text += f"{t('expenses', lang)}: {expense_total:.2f} {currency}\n\n"
 
-    text += f"Today: {CURRENCY} {today_expense:.2f}\n"
-    text += f"This month: {CURRENCY} {month_expense:.2f}\n\n"
+    text += f"{t('today', lang)}: {today_expense:.2f} {currency}\n"
+    text += f"{t('month', lang)}: {month_expense:.2f} {currency}\n\n"
 
-    text += "Top categories:\n"
+    text += f"{t('top_categories', lang)}:\n"
+
     if not categories:
-        text += "No data\n"
+        text += f"{t('no_data', lang)}\n"
     else:
         for cat, total in categories:
-            text += f"- {cat}: {CURRENCY} {total:.2f}\n"
+            text += f"- {localize_category(cat, lang)}: {total:.2f} {currency}\n"
 
-    text += "\nLast expenses:\n"
+    text += f"\n{t('last_expenses', lang)}:\n"
+
     if not last_expenses:
-        text += "No expenses yet\n"
+        text += f"{t('no_expenses_yet', lang)}\n"
     else:
         for name, amount in last_expenses:
-            text += f"- {name}: {CURRENCY} {amount:.2f}\n"
+            text += f"- {name}: {amount:.2f} {currency}\n"
 
     return text
 
+
 # ===== EXPORT =====
 def export_data(chat_id):
+    lang, currency = get_locale_data(chat_id)
+
     entries = get_user_entries(chat_id)
 
     if not entries:
@@ -202,29 +228,29 @@ def export_data(chat_id):
 
     now = datetime.now().strftime("%Y-%m-%d")
     export_file = Path(__file__).with_name(f"expensesAI_export_{now}.txt")
+
     income = sum(item["amount"] for item in entries if item["type"] == "income")
     expense = sum(item["amount"] for item in entries if item["type"] == "expense")
     balance = income - expense
 
     lines = []
     lines.append("💸 ExpensesAI Export")
-    lines.append(f"Date: {now}")
+    lines.append(f"{t('date', lang)}: {now}")
     lines.append("")
-    lines.append(f"Balance: {CURRENCY}{balance:.2f}")
-    lines.append(f"Income: {CURRENCY}{income:.2f}")
-    lines.append(f"Expenses: {CURRENCY}{expense:.2f}")
+    lines.append(f"{t('balance', lang)}: {balance:.2f} {currency}")
+    lines.append(f"{t('income', lang)}: {income:.2f} {currency}")
+    lines.append(f"{t('expenses', lang)}: {expense:.2f} {currency}")
     lines.append("")
 
     for i, item in enumerate(entries, start=1):
         lines.append(f"{i}. {item['created_at']}")
-        lines.append(f"   Type: {item['type']}")
-        lines.append(f"   Name: {item['name']}")
-        lines.append(f"   Amount: {CURRENCY}{item['amount']}")
-        lines.append(f"   Category: {item['category']}")
+        lines.append(f"   {t('type', lang)}: {item['type']}")
+        lines.append(f"   {t('name', lang)}: {item['name']}")
+        lines.append(f"   {t('amount', lang)}: {item['amount']:.2f} {currency}")
+        lines.append(f"   {t('category', lang)}: {localize_category(item['category'], lang)}")
         lines.append("")
 
     with open(export_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
     return export_file
-
