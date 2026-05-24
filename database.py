@@ -294,6 +294,3 @@ def ensure_user_settings(chat_id, language="en", currency="PLN"):
 
     conn.commit()
     conn.close()
-
-# ===== DATABASE STARTUP =====
-init_db()
