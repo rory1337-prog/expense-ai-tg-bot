@@ -1,18 +1,46 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-reports_menu = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(text="Today", callback_data="today"),
-            InlineKeyboardButton(text="Week", callback_data="week")
-        ],
-        [
-            InlineKeyboardButton(text="Month", callback_data="month"),
-            InlineKeyboardButton(text="All", callback_data="all")
-        ],
-        [
-            InlineKeyboardButton(text="Balance", callback_data="balance"),
-            InlineKeyboardButton(text="Analytics", callback_data="analytics")
+from locales import t
+
+
+def build_reports_menu(lang="en"):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=t("today", lang),
+                    callback_data="today"
+                ),
+                InlineKeyboardButton(
+                    text=t("week", lang),
+                    callback_data="week"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=t("month", lang),
+                    callback_data="month"
+                ),
+                InlineKeyboardButton(
+                    text=t("all", lang),
+                    callback_data="all"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=t("balance", lang),
+                    callback_data="balance"
+                ),
+                InlineKeyboardButton(
+                    text=t("analytics", lang),
+                    callback_data="analytics"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=t("export", lang),
+                    callback_data="export"
+                )
+            ]
         ]
-    ]
-)
+    )

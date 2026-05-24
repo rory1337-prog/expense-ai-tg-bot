@@ -1,0 +1,78 @@
+💸 ExpensesAI Export
+Data: 2026-05-24
+
+Bilans: 5730.03 PLN
+Dochody: 6000.00 PLN
+Wydatki: 269.97 PLN
+
+1. 2026-05-24T15:48:45
+   Typ: expense
+   Nazwa: PERRY MIL 0,5L BUT ZWR-A
+   Kwota: 13.98 PLN
+   Kategoria: food
+
+2. 2026-05-24T15:48:25
+   Typ: expense
+   Nazwa: Perry Mil 0.5L
+   Kwota: 6.99 PLN
+   Kategoria: food
+
+3. 2026-05-24T15:45:58
+   Typ: expense
+   Nazwa: кофе
+   Kwota: 15.00 PLN
+   Kategoria: other
+
+4. 2026-05-24T15:43:02
+   Typ: expense
+   Nazwa: кофе
+   Kwota: 15.00 PLN
+   Kategoria: other
+
+5. 2026-05-23T13:44:01
+   Typ: expense
+   Nazwa: coffee
+   Kwota: 20.00 PLN
+   Kategoria: food
+
+6. 2026-05-23T13:08:41
+   Typ: expense
+   Nazwa: coffee
+   Kwota: 15.00 PLN
+   Kategoria: food
+
+7. 2026-05-18T22:16:16
+   Typ: expense
+   Nazwa: Spodnie
+   Kwota: 129.00 PLN
+   Kategoria: shopping
+
+8. 2026-05-18T22:14:19
+   Typ: income
+   Nazwa: salary
+   Kwota: 3000.00 PLN
+   Kategoria: income
+
+9. 2026-05-18T22:14:07
+   Typ: expense
+   Nazwa: burger king
+   Kwota: 25.00 PLN
+   Kategoria: food
+
+10. 2026-05-18T22:13:57
+   Typ: expense
+   Nazwa: coffee
+   Kwota: 15.00 PLN
+   Kategoria: food
+
+11. 2026-05-18T21:52:42
+   Typ: expense
+   Nazwa: coffee
+   Kwota: 15.00 PLN
+   Kategoria: food
+
+12. 2026-05-18T21:52:03
+   Typ: income
+   Nazwa: salary
+   Kwota: 3000.00 PLN
+   Kategoria: income

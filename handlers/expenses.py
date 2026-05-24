@@ -3,54 +3,113 @@ from aiogram.types import Message
 
 from database import save_entry, get_user_settings
 from parser import parse_expense, parse_income
+from locales import t
+from locales.categories import localize_category
+from keyboards.buttons import b
 
 router = Router()
 
-@router.message(lambda message: message.text and message.text.lower().startswith("income "))
-async def income_handler(message: Message):
-    entry = parse_income(message.text)
-
-    if not entry:
-        await message.answer("Could not parse income. Try: income salary 3000")
-        return
-
-    ok = save_entry(entry, message.chat.id)
-    settings = get_user_settings(message.chat.id)
-    currency = settings["currency"]
-
-    if ok:
-        await message.answer(
-            f"✅ Income saved:\n{entry['name']} — {entry['amount']} {currency}"
-        )
-    else:
-        await message.answer("❌ Failed to save income.")
 
 @router.message(
     lambda message:
     message.text
-    and not message.text.startswith('/')
-    and message.text not in [
-        "➕ Add expense",
-        "📊 Reports",
-        "✏️ Edit",
-        "⚙️ Settings"
+    and message.text.lower().strip().split()[0] in [
+        "income",
+        "salary",
+        "зарплата",
+        "зп",
+        "доход",
+        "pensja",
+        "przychod",
+        "przychód",
     ]
 )
-async def expense_text_handler(message: Message):
-    entry = parse_expense(message.text)
+async def income_handler(message: Message):
+    settings = get_user_settings(message.chat.id)
+    lang = settings["language"]
+    currency = settings["currency"]
+
+    if message.text.lower().strip() in [
+        "income",
+        "salary",
+        "зарплата",
+        "зп",
+        "доход",
+        "pensja",
+        "przychod",
+        "przychód",
+    ]:
+        await message.answer(t("send_income_example", lang))
+        return
+
+    entry = parse_income(message.text)
 
     if not entry:
-        await message.answer("Could not parse expense. Try: coffee 15")
+        await message.answer(t("failed_parse_income", lang))
         return
-    
+
     ok = save_entry(entry, message.chat.id)
-    settings = get_user_settings(message.chat.id)
-    currency = settings["currency"]
 
     if ok:
         await message.answer(
-            f"✅ Expense saved:\n{entry['name']} — {entry['amount']} {currency}\nCategory: {entry['category']}"
+            f"{t('income_saved', lang)}:\n"
+            f"{entry['name']} — {entry['amount']} {currency}"
         )
     else:
-        await message.answer("❌ Failed to save expense.")
+        await message.answer(t("failed_save_income", lang))
+
+
+@router.message(
+    lambda message:
+    message.text
+    and not message.text.startswith("/")
+    and message.text.lower().strip().split()[0] not in [
+        "income",
+        "salary",
+        "зарплата",
+        "зп",
+        "доход",
+        "pensja",
+        "przychod",
+        "przychód",
+    ]
+    and message.text not in [
+        b("add_expense", "en"),
+        b("add_expense", "ru"),
+        b("add_expense", "pl"),
+
+        b("reports", "en"),
+        b("reports", "ru"),
+        b("reports", "pl"),
+
+        b("edit", "en"),
+        b("edit", "ru"),
+        b("edit", "pl"),
+
+        b("settings", "en"),
+        b("settings", "ru"),
+        b("settings", "pl"),
+    ]
+)
+async def expense_text_handler(message: Message):
+    settings = get_user_settings(message.chat.id)
+    lang = settings["language"]
+    currency = settings["currency"]
+
+    entry = parse_expense(message.text)
+
+    if not entry:
+        await message.answer(t("failed_parse_expense", lang))
+        return
+
+    ok = save_entry(entry, message.chat.id)
+
+    if ok:
+        await message.answer(
+            f"{t('expense_saved', lang)}:\n"
+            f"{entry['name']} — {entry['amount']} {currency}\n"
+            f"{t('category', lang)}: {localize_category(entry['category'], lang)}"
+        )
+    else:
+        await message.answer(t("failed_save_expense", lang))
         

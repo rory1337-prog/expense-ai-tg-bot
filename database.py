@@ -279,5 +279,21 @@ def set_user_currency(chat_id, currency):
     conn.commit()
     conn.close()
 
+
+def ensure_user_settings(chat_id, language="en", currency="PLN"):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO user_settings (chat_id, language, currency)
+        VALUES (?, ?, ?)
+        """,
+        (chat_id, language, currency)
+    )
+
+    conn.commit()
+    conn.close()
+
 # ===== DATABASE STARTUP =====
 init_db()
