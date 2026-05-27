@@ -6,6 +6,8 @@ from parser import parse_expense, parse_income
 from locales import t
 from locales.categories import localize_category
 from keyboards.buttons import b
+from ai import ai_clasify_message
+from handlers.ask import handle_finance_question
 
 router = Router()
 
@@ -95,6 +97,20 @@ async def expense_text_handler(message: Message):
     settings = get_user_settings(message.chat.id)
     lang = settings["language"]
     currency = settings["currency"]
+
+    message_type = await ai_clasify_message(message.text)
+
+    if message_type == "question":
+        await handle_finance_question(message, message.text)
+        return
+
+    if message_type == "income":
+        await income_handler(message)
+        return
+
+    if message_type in ["unknown"]:
+        await message.answer(t("failed_parse_expense", lang))
+        return
 
     entry = parse_expense(message.text)
 

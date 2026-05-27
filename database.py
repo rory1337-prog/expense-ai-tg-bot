@@ -267,3 +267,95 @@ def ensure_user_settings(chat_id, language="en", currency="PLN"):
             (chat_id, language, currency)
         )
 
+def get_total_spending(chat_id, period):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        if period == "week":
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-7 days')
+            """, (chat_id,))
+
+        elif period == "month":
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-30 days')
+            """, (chat_id,))
+
+        elif period == "today":
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND date(created_at) = date('now')
+            """, (chat_id,))
+
+        else:
+            
+            return 0
+        result = cursor.fetchone()[0]
+        
+        return result or 0
+    
+def get_top_category(chat_id, period):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        if period == "week":
+            cursor.execute("""
+                SELECT category, SUM(amount) as total
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-7 days')
+                GROUP BY category
+                ORDER BY total DESC
+                LIMIT 1
+            """, (chat_id,))
+
+        elif period == "month":
+            cursor.execute("""
+                SELECT category, SUM(amount) as total
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-30 days')
+                GROUP BY category
+                ORDER BY total DESC
+                LIMIT 1
+            """, (chat_id,))
+
+        elif period == "today":
+            cursor.execute("""
+                SELECT category, SUM(amount) as total
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND date(created_at) = date('now')
+                GROUP BY category
+                ORDER BY total DESC
+                LIMIT 1
+            """, (chat_id,))
+
+        else:
+            
+            return None
+
+        result = cursor.fetchone()
+    
+
+    if not result:
+        return None
+
+    return {
+        "category": result[0],
+        "total": result[1]
+    }

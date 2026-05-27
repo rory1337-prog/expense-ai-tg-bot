@@ -142,3 +142,145 @@ async def ai_parse_photo(image_path):
     except Exception:
         logger.exception("AI receipt parsing failed")
         return None
+    
+async def ai_parse_question(question):
+    question = question.lower()
+
+    period = "month"
+
+    if "today" in question:
+        period = "today"
+    elif "week" in question:
+        period = "week"
+    elif "month" in question:
+        period = "month"
+
+    if "how much" in question:
+        return {
+            "intent": "total_spending",
+            "period": period
+        }
+
+    if "biggest" in question or "top" in question:
+        return {
+            "intent": "top_category",
+            "period": period
+        }
+
+    return {
+        "intent": "unknown"
+    }
+
+
+def classify_message(text):
+    text = text.lower().strip()
+
+    question_keywords = [
+        "how much",
+        "spent",
+        "spend",
+        "biggest",
+        "category",
+        "this week",
+        "this month",
+        "last week",
+        "last month",
+
+        "сколько",
+        "потратил",
+        "потратила",
+        "расход",
+        "расходы",
+        "категория",
+        "самая большая",
+
+        "ile",
+        "wydałem",
+        "wydałam",
+        "wydatki",
+        "kategoria",
+    ]
+
+    if text.endswith("?"):
+        return "question"
+
+    for keyword in question_keywords:
+        if keyword in text:
+            return "question"
+
+    return "transaction"
+
+async def ai_clasify_message(text):
+
+    if not OPENAI_API_KEY:
+        return "transaction"
+    
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": "gpt-4.1-mini",
+        "input": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": (
+                            f'Classify this finance message: "{text}"'
+                        )
+                    }
+                ]
+            }
+        ],
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": "message_classifier",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "expense",
+                                "income",
+                                "question",
+                                "unknown"
+                            ]
+                        }
+                    },
+                    "required": ["type"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        }
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/responses",
+                headers=headers,
+                json=payload
+            )
+
+        if response.status_code != 200:
+            return "unknown"
+        
+        data = response.json()
+
+        output_text = (
+            data["output"][0]["content"][0]["text"]
+        )
+
+        result = json.loads(output_text)
+
+        return result["type"]
+    
+    except Exception:
+        logger.exception("AI message classification failed")
+        return "unknown"

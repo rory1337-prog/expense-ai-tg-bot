@@ -12,6 +12,7 @@ from handlers.reports import router as reports_router
 from handlers.edit import router as edit_router
 from handlers.photos import router as photos_router
 from handlers.settings import router as settings_router
+from handlers.ask import router as ask_router
 from handlers.expenses import router as expenses_router
 
 load_dotenv()
@@ -27,6 +28,7 @@ dp.include_router(reports_router)
 dp.include_router(edit_router)
 dp.include_router(photos_router)
 dp.include_router(settings_router)
+dp.include_router(ask_router)
 dp.include_router(expenses_router)
 
 async def main():
