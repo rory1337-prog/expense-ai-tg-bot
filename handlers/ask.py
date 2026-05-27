@@ -17,11 +17,17 @@ async def handle_finance_question(message: Message, question: str):
         )
 
         settings = get_user_settings(message.chat.id)
+        lang = result["language"]
         currency = settings["currency"]
 
-        await message.answer(
-            f"You spent {total:.2f} {currency} this {result['period']}."
-        )
+        if lang == "ru":
+            text = f"Ты потратил {total:.2f} {currency} за период: {result['period']}."
+        elif lang == "pl":
+            text = f"Wydałeś {total:.2f} {currency} za okres: {result['period']}."
+        else:
+            text = f"You spent {total:.2f} {currency} this {result['period']}."
+
+        await message.answer(text)
 
         return
     
@@ -38,10 +44,23 @@ async def handle_finance_question(message: Message, question: str):
             await message.answer("No expenses found for this period.")
             return
 
-        await message.answer(
-            f"Your top category this {result['period']} is "
-            f"{top['category']} ({top['total']:.2f} {currency})."
-        )
+        if lang == "ru":
+            text = (
+                f"Твоя топ категория за период {result['period']}: "
+                f"{top['category']} ({top['total']:.2f} {currency})."
+            )
+        elif lang == "pl":
+            text = (
+                f"Twoja top kategoria za okres {result['period']} to "
+                f"{top['category']} ({top['total']:.2f} {currency})."
+            )
+        else:
+            text = (
+                f"Your top category this {result['period']} is "
+                f"{top['category']} ({top['total']:.2f} {currency})."
+            )
+
+        await message.answer(text)
 
         return
 

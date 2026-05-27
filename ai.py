@@ -144,32 +144,98 @@ async def ai_parse_photo(image_path):
         return None
     
 async def ai_parse_question(question):
-    question = question.lower()
+    if not OPENAI_API_KEY:
+        return {"intent": "unknown", "period": "month"}
 
-    period = "month"
-
-    if "today" in question:
-        period = "today"
-    elif "week" in question:
-        period = "week"
-    elif "month" in question:
-        period = "month"
-
-    if "how much" in question:
-        return {
-            "intent": "total_spending",
-            "period": period
-        }
-
-    if "biggest" in question or "top" in question:
-        return {
-            "intent": "top_category",
-            "period": period
-        }
-
-    return {
-        "intent": "unknown"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
     }
+
+    payload = {
+        "model": "gpt-4.1-mini",
+        "input": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": (
+                            "Parse the user's finance question into intent and period.\n"
+                            "The question can be in English, Russian, Polish, or mixed language.\n\n"
+                            "Supported intents:\n"
+                            "- total_spending: asks how much was spent\n"
+                            "- top_category: asks biggest/top spending category\n"
+                            "- unknown: not supported\n\n"
+                            "Supported periods:\n"
+                            "- today\n"
+                            "- week\n"
+                            "- month\n\n"
+                            "Detect the language of the question.\n"
+                            "Examples:\n"
+                            "сколько я потратил сегодня? -> total_spending, today\n"
+                            "ile wydałem w tym tygodniu? -> total_spending, week\n"
+                            "what is my top category this month? -> top_category, month\n\n"
+                            "Return only structured JSON.\n\n"
+                            f"Question: {question}"
+                        ),
+                    }
+                ],
+            }
+        ],
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": "finance_question_parser",
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "intent": {
+                            "type": "string",
+                            "enum": ["total_spending", "top_category", "unknown"],
+                        },
+                        "period": {
+                            "type": "string",
+                            "enum": ["today", "week", "month"],
+                        },
+                        "language": {
+                            "type": "string",
+                            "enum": ["en", "ru", "pl"]
+                        }
+                    },
+                    "required": ["intent", "period", "language"],
+                },
+                "strict": True,
+            }
+        },
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/responses",
+                headers=headers,
+                json=payload
+            )
+
+        if response.status_code != 200:
+            print("OPENAI QUESTION PARSE ERROR:", response.status_code, response.text)
+            return {"intent": "unknown", "period": "month"}
+
+        data = response.json()
+        output_text = data["output"][0]["content"][0]["text"]
+        result = json.loads(output_text)
+
+        return {
+            "intent": result["intent"],
+            "period": result["period"],
+            "language": result["language"]
+        }
+
+    except Exception:
+        logger.exception("AI question parsing failed")
+        return {"intent": "unknown", "period": "month"}
 
 
 def classify_message(text):
@@ -210,7 +276,7 @@ def classify_message(text):
 
     return "transaction"
 
-async def ai_clasify_message(text):
+async def ai_classify_message(text):
 
     if not OPENAI_API_KEY:
         return "transaction"
@@ -229,7 +295,14 @@ async def ai_clasify_message(text):
                     {
                         "type": "input_text",
                         "text": (
-                            f'Classify this finance message: "{text}"'
+                            "Classify the user finance message into one of these types:\n"
+                            "- expense: user wants to add an expense, e.g. coffee 15, кофе 15, kawa 15\n"
+                            "- income: user wants to add income, e.g. salary 3000, зарплата 3000, pensja 3000\n"
+                            "- question: user asks about stored financial data, totals, categories, reports, analytics, spending, balance\n"
+                            "- unknown: message is not related to finance tracking\n\n"
+                            "The message may be in English, Russian, Polish, or mixed language.\n"
+                            "Return only structured JSON.\n\n"
+                            f"Message: {text}"
                         )
                     }
                 ]
