@@ -227,7 +227,12 @@ def export_data(chat_id):
         return None
 
     now = datetime.now().strftime("%Y-%m-%d")
-    export_file = Path(__file__).with_name(f"expensesAI_export_{now}.txt")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    export_dir = Path("exports")
+    export_dir.mkdir(exist_ok=True)
+
+    export_file = export_dir / f"expensesAI_export_{chat_id}_{timestamp}.txt"
 
     income = sum(item["amount"] for item in entries if item["type"] == "income")
     expense = sum(item["amount"] for item in entries if item["type"] == "expense")
