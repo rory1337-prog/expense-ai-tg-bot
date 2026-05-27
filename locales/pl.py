@@ -55,28 +55,25 @@ TEXTS = {
     "no_data_export": "Brak danych do eksportu.",
     "send_income_example": "Wyślij przychód tak:\nprzychód pensja 5000",
     "help_text": (
-        "💸 ExpensesAI — bot AI do śledzenia finansów.\n\n"
-
-        "➕ Dodawanie wydatków:\n"
+        "💸 Bot AI do śledzenia finansów.\n\n"
+        "Przykłady:\n"
         "• kawa 15\n"
-        "• zakupy 120\n\n"
-
-        "💰 Dodawanie przychodów:\n"
-        "• pensja 5000\n"
-        "• przychód 5000\n\n"
+        "• pensja 3000\n"
+        "• ile wydałem w tym tygodniu?\n"
+        "• jaka jest moja największa kategoria w tym miesiącu?\n\n"
 
         "📊 Raporty:\n"
-        "• today — wydatki z dziś\n"
+        "• today — wydatki za dziś\n"
         "• week — wydatki tygodniowe\n"
         "• month — wydatki miesięczne\n"
         "• analytics — analiza wydatków\n"
         "• export — eksport danych\n\n"
 
         "✏️ Edycja:\n"
-        "• edycja wpisów\n"
+        "• edytowanie wpisów\n"
         "• usuwanie wpisów\n\n"
 
-        "📷 Możesz też wysłać zdjęcie paragonu — bot spróbuje odczytać je automatycznie."
+        "📷 Możesz też wysłać zdjęcie paragonu — bot spróbuje automatycznie go rozpoznać."
     ),
     "help": "Pomoc",
     

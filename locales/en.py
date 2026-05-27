@@ -56,14 +56,11 @@ TEXTS = {
     "send_income_example": "Send income like:\nincome salary 5000",
     "help_text": (
         "💸 AI-powered finance tracking bot.\n\n"
-
-        "➕ Add expenses:\n"
+        "Examples:\n"
         "• coffee 15\n"
-        "• groceries 120\n\n"
-
-        "💰 Add income:\n"
-        "• income 5000\n"
-        "• salary 5000\n\n"
+        "• salary 3000\n"
+        "• how much did I spend this week?\n"
+        "• what is my top category this month?\n\n"
 
         "📊 Reports:\n"
         "• today — today's expenses\n"

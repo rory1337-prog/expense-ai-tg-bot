@@ -10,9 +10,6 @@ def build_main_menu(lang="en"):
     return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text=b("add_expense", lang))
-            ],
-            [
                 KeyboardButton(text=b("reports", lang)),
                 KeyboardButton(text=b("edit", lang)),
             ],
