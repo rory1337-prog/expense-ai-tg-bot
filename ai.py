@@ -142,3 +142,61 @@ async def ai_parse_photo(image_path):
     except Exception:
         logger.exception("AI receipt parsing failed")
         return None
+    
+async def ai_parse_question(question):
+    question = question.lower()
+
+    if "how much" in question:
+        return {
+            "intent": "total_spending",
+            "period": "week"
+        }
+    
+    if "biggest" in question:
+        return {
+            "intent": "top_category",
+            "period": "month"
+        }
+    
+    return {
+        "intent": "unknown"
+    }
+
+
+def classify_message(text):
+    text = text.lower().strip()
+
+    question_keywords = [
+        "how much",
+        "spent",
+        "spend",
+        "biggest",
+        "category",
+        "this week",
+        "this month",
+        "last week",
+        "last month",
+
+        "сколько",
+        "потратил",
+        "потратила",
+        "расход",
+        "расходы",
+        "категория",
+        "самая большая",
+
+        "ile",
+        "wydałem",
+        "wydałam",
+        "wydatki",
+        "kategoria",
+    ]
+
+    if text.endswith("?"):
+        return "question"
+
+    for keyword in question_keywords:
+        if keyword in text:
+            return "question"
+
+    return "transaction"
