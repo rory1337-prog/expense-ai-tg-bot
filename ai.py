@@ -83,7 +83,7 @@ async def ai_parse_photo(image_path):
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.post(
             "https://api.openai.com/v1/responses",
-            headers=headers
+            headers=headers,
             json=payload
         )
 
