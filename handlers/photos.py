@@ -30,7 +30,7 @@ async def photo_handler(message: Message):
 
     await message.bot.download_file(file.file_path, destination=file_path)
 
-    entry = ai_parse_photo(str(file_path))
+    entry = await ai_parse_photo(str(file_path))
 
     file_path.unlink(missing_ok=True)
 

@@ -2,7 +2,7 @@
 import logging
 import json
 import base64
-import requests
+import httpx
 from datetime import datetime
 
 from config import OPENAI_API_KEY
@@ -10,7 +10,7 @@ from parser import detect_category
 
 logger = logging.getLogger(__name__)
 # ===== AI RECEIPT PARSING =====
-def ai_parse_photo(image_path):
+async def ai_parse_photo(image_path):
     if not OPENAI_API_KEY:
         print('OPENAI_API_KEY not found')
         return None
@@ -80,12 +80,12 @@ def ai_parse_photo(image_path):
         },
     }
 
-    response = requests.post(
-        "https://api.openai.com/v1/responses",
-        headers=headers,
-        json=payload,
-        timeout=30,
-    )
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.post(
+            "https://api.openai.com/v1/responses",
+            headers=headers
+            json=payload
+        )
 
     if response.status_code != 200:
         print("OPENAI ERROR:", response.status_code, response.text)
