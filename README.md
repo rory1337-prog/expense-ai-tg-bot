@@ -1,42 +1,74 @@
 # ExpensesAI Telegram Bot
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Docker](https://img.shields.io/badge/Docker-enabled-blue)
+![Tests](https://img.shields.io/badge/tests-pytest-green)
+![Status](https://img.shields.io/badge/status-MVP-success)
 
-AI-powered Telegram bot for personal expense tracking with receipt parsing, analytics, reports, and data export.
+AI-powered Telegram bot for personal finance tracking with OpenAI receipt parsing, analytics, reporting, and export functionality.
 
-GitHub repository: https://github.com/rory1337-prog/expense-ai-tg-bot
+Built with Python, aiogram, OpenAI API, SQLite, and Docker.
 
 ## Features
 
-- AI receipt parsing (OpenAI Vision)
+- AI receipt parsing using OpenAI Vision
 - Expense & income tracking
-- Multilanguage support (EN / RU / PL)
-- Reports & analytics
-- Edit / delete entries
-- Export data
-- Docker deployment
-- VPS 24/7 hosting
-- SQLite storage
+- Multi-language support (EN / RU / PL)
+- Daily / weekly / monthly reports
+- Analytics & balance tracking
+- Edit / delete expense entries
+- Export expense history
+- Dockerized deployment
+- Persistent SQLite storage
+- VPS production hosting
+
+## Production Features
+
+- Async OpenAI integration using httpx
+- Structured JSON schema validation
+- Modular aiogram architecture
+- Persistent SQLite database
+- Unit-tested parser logic (pytest)
+- Unique export file generation
+- Environment-based configuration
+- Docker restart policies for uptime
 
 ## Tech Stack
 
+### Backend
+
 - Python 3
-- Telegram Bot API
-- OpenAI API
+- aiogram 3.x
 - SQLite
-- dotenv
-- requests
+- OpenAI API
+- httpx
+
+### DevOps
+
 - Docker
-- Linux VPS (Ubuntu)
+- Ubuntu VPS
+- GitHub
+- dotenv
 
-## Deployment
+### Testing
 
-The bot is deployed on an Ubuntu VPS and containerized using Docker.
+- pytest
 
-Production setup includes:
-- Docker containerization
-- automatic Docker container restart
-- environment variable management with `.env`
-- persistent SQLite storage
-- GitHub-based deployment workflow
+## Architecture
+
+```text
+Telegram User
+    ↓
+bot.py
+    ↓
+handlers/
+    ↓
+parser.py        → text parsing
+ai.py            → OpenAI receipt parsing
+reports.py       → reports & analytics
+database.py      → SQLite operations
+    ↓
+SQLite
+```
 
 ## Project Structure
 
@@ -44,8 +76,9 @@ Production setup includes:
 expense-ai-tg-bot/
 ├── handlers/           # Aiogram routers
 ├── keyboards/          # Telegram keyboards
-├── locales/            # Multilanguage texts
+├── locales/            # Multi-language texts
 ├── states/             # FSM states
+├── tests/              # Unit tests
 ├── ai.py               # OpenAI receipt parsing
 ├── parser.py           # Expense/income parsing
 ├── reports.py          # Reports & analytics
@@ -57,29 +90,15 @@ expense-ai-tg-bot/
 └── README.md
 ```
 
-## Architecture
+## Demo
 
-
-```text
-Telegram User
-    ↓
-bot.py                      # aiogram entrypoint
-    ↓
-handlers/                   # routers & message handlers
-    ↓
-parser.py                   # text expense/income parsing
-ai.py                       # OpenAI receipt parsing
-reports.py                  # reports & analytics
-database.py                 # SQLite persistence
-    ↓
-SQLite
-```
+Demo GIF / screenshots coming soon.
 
 ## Example Usage
 
 ```text
 coffee 15
-burger king 25
+uber 30
 /income salary 3000
 /report
 /today
@@ -92,60 +111,81 @@ burger king 25
 
 ## Receipt Parsing
 
-Users can send a receipt photo directly in Telegram.  
-The bot downloads the image, sends it to OpenAI, extracts structured expense data, normalizes the category, and stores everything in SQLite.
+1. User sends receipt photo
+2. Bot downloads image
+3. Image is sent to OpenAI Vision API
+4. Structured expense data is extracted
+5. Category is normalized locally
+6. Data is stored in SQLite
 
 Supported extraction:
-- expense name
-- amount
-- category
 
-## Setup
+* expense name
+* amount
+* category
 
-1. Clone repository:
+## Testing
+
+Run unit tests:
+
+```bash
+pytest
+```
+
+Current test coverage:
+
+- category detection
+- expense parsing
+- income parsing
+- decimal values
+- invalid input handling
+
+## Deployment
+
+Production deployment includes:
+
+- Docker containerization
+- Automatic container restart
+- `.env`-based secret management
+- Persistent SQLite storage
+- VPS hosting (Ubuntu)
+
+Run locally:
 
 ```bash
 git clone https://github.com/rory1337-prog/expense-ai-tg-bot.git
 cd expense-ai-tg-bot
+pip install -r requirements.txt
+python3 bot.py
 ```
 
-2. Install dependencies:
+Create `.env`:
 
 ```bash
-pip install -r requirements.txt
-```
-
-3. Create `.env` file:
-
-```env
 BOTTOKEN=your_telegram_bot_token
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-4. Run the bot:
-
-```bash
-python3 bot.py
-```
-
 ## Roadmap
 
-- Inline keyboard UI
+- Inline keyboard UI improvements
 - PostgreSQL migration
-- Unit tests with pytest
-- AI financial assistant (`/ask`)
-- Budget limits and alerts
-- Currency selection
-- Multi-user settings
-- Webhook-based deployment
+- AI financial assistant (/ask)
+- Budget limits & notifications
+- Webhook support
+- OCR fallback system
+- Advanced analytics dashboard
+- CI/CD pipeline
+- Web/mobile frontend
 
 ## Status
 
-Production MVP deployed.
+Production MVP deployed on VPS with Docker and active development ongoing.
 
 Current focus:
-- command handler architecture
+
 - UX improvements
-- testing
-- AI features
+- AI-powered analytics
 - database scalability
+- testing & reliability
+- infrastructure improvements
