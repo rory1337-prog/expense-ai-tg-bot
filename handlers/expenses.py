@@ -6,7 +6,7 @@ from parser import parse_expense, parse_income
 from locales import t
 from locales.categories import localize_category
 from keyboards.buttons import b
-from ai import ai_clasify_message
+from ai import ai_classify_message
 from handlers.ask import handle_finance_question
 
 router = Router()
@@ -98,7 +98,7 @@ async def expense_text_handler(message: Message):
     lang = settings["language"]
     currency = settings["currency"]
 
-    message_type = await ai_clasify_message(message.text)
+    message_type = await ai_classify_message(message.text)
 
     if message_type == "question":
         await handle_finance_question(message, message.text)
