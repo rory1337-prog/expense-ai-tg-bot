@@ -38,6 +38,7 @@ async def handle_finance_question(message: Message, question: str):
         )
 
         settings = get_user_settings(message.chat.id)
+        lang = result["language"]
         currency = settings["currency"]
 
         if not top:
