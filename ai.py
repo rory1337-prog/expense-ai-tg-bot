@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # ===== AI RECEIPT PARSING =====
 async def ai_parse_photo(image_path):
     if not OPENAI_API_KEY:
-        print('OPENAI_API_KEY not found')
+        logger.warning("OPENAI_API_KEY not found")
         return None
     
 
@@ -88,7 +88,7 @@ async def ai_parse_photo(image_path):
         )
 
     if response.status_code != 200:
-        print("OPENAI ERROR:", response.status_code, response.text)
+        logger.error("OpenAI error %s: %s", response.status_code, response.text)
         return None
 
     # ===== RESPONSE PARSING =====
@@ -107,7 +107,7 @@ async def ai_parse_photo(image_path):
                 break
 
         if not text_output:
-            print("No output_text in OpenAI response")
+            logger.warning("No output_text in OpenAI response")
             return None
 
         expense = json.loads(text_output)
@@ -220,7 +220,7 @@ async def ai_parse_question(question):
             )
 
         if response.status_code != 200:
-            print("OPENAI QUESTION PARSE ERROR:", response.status_code, response.text)
+            logger.error("OpenAI question parse error %s: %s", response.status_code, response.text)
             return {"intent": "unknown", "period": "month"}
 
         data = response.json()
