@@ -76,5 +76,9 @@ TEXTS = {
         "📷 You can also send a receipt photo — the bot will try to parse it automatically."
     ),
     "help": "Help",
+    "spent_period": "You spent {total} {currency} this {period}.",
+    "top_category_period": "Your top category this {period} is {category} ({total} {currency}).",
+    "no_expenses_period": "No expenses found for this period.",
+    "unknown_question": "I couldn't understand this finance question yet.",
     
 }

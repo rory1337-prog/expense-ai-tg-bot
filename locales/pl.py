@@ -76,5 +76,9 @@ TEXTS = {
         "📷 Możesz też wysłać zdjęcie paragonu — bot spróbuje automatycznie go rozpoznać."
     ),
     "help": "Pomoc",
+    "spent_period": "Wydałeś {total} {currency} za okres: {period}.",
+    "top_category_period": "Twoja top kategoria za okres {period} to {category} ({total} {currency}).",
+    "no_expenses_period": "Brak wydatków w tym okresie.",
+    "unknown_question": "Nie rozumiem tego pytania.",
     
 }

@@ -9,63 +9,31 @@ router = Router()
 
 async def handle_finance_question(message: Message, question: str):
     result = await ai_parse_question(question)
+    lang = result["language"]
+    settings = get_user_settings(message.chat.id)
+    currency = settings["currency"]
 
     if result["intent"] == "total_spending":
-        total = get_total_spending(
-            message.chat.id,
-            result["period"]
+        total = get_total_spending(message.chat.id, result["period"])
+        text = t("spent_period", lang).format(
+            total=f"{total:.2f}", currency=currency, period=result["period"]
         )
 
-        settings = get_user_settings(message.chat.id)
-        lang = result["language"]
-        currency = settings["currency"]
-
-        if lang == "ru":
-            text = f"Ты потратил {total:.2f} {currency} за период: {result['period']}."
-        elif lang == "pl":
-            text = f"Wydałeś {total:.2f} {currency} za okres: {result['period']}."
-        else:
-            text = f"You spent {total:.2f} {currency} this {result['period']}."
-
-        await message.answer(text)
-
-        return
-    
-    if result["intent"] == "top_category":
-        top = get_top_category(
-            message.chat.id,
-            result["period"]
-        )
-
-        settings = get_user_settings(message.chat.id)
-        lang = result["language"]
-        currency = settings["currency"]
-
+    elif result["intent"] == "top_category":
+        top = get_top_category(message.chat.id, result["period"])
         if not top:
-            await message.answer("No expenses found for this period.")
-            return
-
-        if lang == "ru":
-            text = (
-                f"Твоя топ категория за период {result['period']}: "
-                f"{top['category']} ({top['total']:.2f} {currency})."
-            )
-        elif lang == "pl":
-            text = (
-                f"Twoja top kategoria za okres {result['period']} to "
-                f"{top['category']} ({top['total']:.2f} {currency})."
-            )
+            text = t("no_expenses_period", lang)
         else:
-            text = (
-                f"Your top category this {result['period']} is "
-                f"{top['category']} ({top['total']:.2f} {currency})."
+            text = t("top_category_period", lang).format(
+                period=result["period"],
+                category=top["category"],
+                total=f"{top['total']:.2f}",
+                currency=currency
             )
+    else:
+        text = t("unknown_question", lang)
 
-        await message.answer(text)
-
-        return
-
-    await message.answer("I couldn't understand this finance question yet.")
+    await message.answer(text)
 
 
 @router.message(F.text.startswith("/ask"))

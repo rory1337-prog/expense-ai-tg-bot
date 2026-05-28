@@ -23,9 +23,6 @@ async def settings_handler(message: Message):
     settings = get_user_settings(message.chat.id)
     lang = settings["language"]
 
-    print("SETTINGS LANG:", lang)
-    print("SETTINGS:", settings)
-
     await message.answer(
         f"{t('settings', lang)}\n\n"
         f"{t('language', lang)}: {settings['language']}\n"

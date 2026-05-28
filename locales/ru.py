@@ -76,4 +76,8 @@ TEXTS = {
         "📷 Вы также можете отправить фото чека — бот попробует распознать его автоматически."
     ),
     "help": "Помощь",
+    "spent_period": "Ты потратил {total} {currency} за период: {period}.",
+    "top_category_period": "Твоя топ категория за период {period}: {category} ({total} {currency}).",
+    "no_expenses_period": "Расходов за этот период нет.",
+    "unknown_question": "Не могу понять этот вопрос.",
 }
