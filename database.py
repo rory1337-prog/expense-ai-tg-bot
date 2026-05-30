@@ -452,3 +452,45 @@ def get_biggest_expenses(chat_id, period, limit=5):
         }
         for row in rows
     ]
+
+def get_avarage_daily_spending(chat_id, period):
+    with get_connection() as conn:
+        cursor = conn.cursor
+
+        if period == "week":
+            days = 7
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-7 days')
+            """, (chat_id,))
+
+        elif period == "month":
+            days = 30
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-30 days')
+            """, (chat_id,))
+
+        elif period == "today":
+            days = 1
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND date(created_at) = date('now')
+            """, (chat_id,))
+        
+        else:
+            return 0
+        
+        result = cursor.fetchone()[0]
+        total = result or 0
+        
+        return total / days
