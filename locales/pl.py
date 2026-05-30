@@ -73,7 +73,10 @@ TEXTS = {
         "• edytowanie wpisów\n"
         "• usuwanie wpisów\n\n"
 
-        "📷 Możesz też wysłać zdjęcie paragonu — bot spróbuje automatycznie go rozpoznać."
+        "📷 Możesz też wysłać zdjęcie paragonu — bot spróbuje automatycznie go rozpoznać.\n\n"
+        
+        "Aktualizacje / roadmapa / feedback:\n"
+        "https://t.me/grindbtco"
     ),
     "help": "Pomoc",
     "spent_period": "Wydałeś {total} {currency} za okres: {period}.",

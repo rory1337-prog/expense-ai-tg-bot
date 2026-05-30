@@ -73,7 +73,10 @@ TEXTS = {
         "• edit entries\n"
         "• delete entries\n\n"
 
-        "📷 You can also send a receipt photo — the bot will try to parse it automatically."
+        "📷 You can also send a receipt photo — the bot will try to parse it automatically.\n\n"
+
+        "Feedback / updates / roadmap:\n"
+        "https://t.me/grindbtco"
     ),
     "help": "Help",
     "spent_period": "You spent {total} {currency} this {period}.",
