@@ -173,6 +173,7 @@ async def ai_parse_question(question):
                             "The question can be in English, Russian, Polish, or mixed language.\n\n"
                             "Supported intents:\n"
                             "- biggest_expenses: asks for largest/biggest expenses or purchases\n"
+                            "- average_daily_spending: asks for average daily spending\n"
                             "- total_spending: asks how much was spent in a period\n"
                             "- top_category: asks biggest/top spending category\n"
                             "- category_spending: asks how much was spent in a specific category\n"
@@ -201,6 +202,7 @@ async def ai_parse_question(question):
                             "сколько я потратил сегодня? -> total_spending, today, null, ru\n"
                             "ile wydałem w tym tygodniu? -> total_spending, week, null, pl\n"
                             "what is my top category this month? -> top_category, month, null, en\n"
+                            "what is my average daily spending this month? -> average_daily_spending, month, null, en\n"
                             "what are my biggest expenses this month? -> biggest_expenses, month, null, en\n"
                             "how much did i spend on food this month? -> category_spending, month, food, en\n"
                             "сколько ушло на транспорт за неделю? -> category_spending, week, transport, ru\n\n"
@@ -225,6 +227,7 @@ async def ai_parse_question(question):
                                 "top_category",
                                 "category_spending",
                                 "biggest_expenses",
+                                "average_daily_spending",
                                 "unknown",
                             ],
                         },
@@ -318,6 +321,8 @@ def classify_message(text):
         "largest expenses",
         "biggest purchases",
         "largest purchases",
+        "average daily spending",
+        "average spending",
 
         "сколько",
         "потратил",
@@ -338,6 +343,8 @@ def classify_message(text):
         "самые большие расходы",
         "крупные расходы",
         "самые дорогие покупки",
+        "средние траты",
+        "средний расход",   
 
         "ile",
         "wydałem",
@@ -354,6 +361,7 @@ def classify_message(text):
         "na edukację",
         "największe wydatki",
         "najdroższe zakupy",
+        "średnie wydatki",
 
     ]
 

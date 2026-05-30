@@ -44,3 +44,10 @@ def test_classify_biggest_expenses_question():
     )
 
     assert result == "question"
+
+def test_classify_average_spending_question():
+    result = classify_message(
+        "what is my average daily spending this month"
+    )
+
+    assert result == "question"

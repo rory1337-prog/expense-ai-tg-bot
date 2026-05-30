@@ -7,7 +7,8 @@ from database import (
     get_top_category,
     get_category_spending,
     get_user_settings,
-    get_biggest_expenses
+    get_biggest_expenses,
+    get_avarage_daily_spending
 )
 from locales import t 
 
@@ -77,6 +78,18 @@ async def handle_finance_question(message: Message, question: str):
                 f"{result['period']}:\n\n"
                 + "\n".join(lines)
             )
+
+    elif result['intent'] == 'average_daily_spending':
+        average = get_avarage_daily_spending(
+            message.chat.id,
+            result['period']
+        )
+        text = (
+            f"Your average daily spending during "
+            f"{result['period']} is "
+            f"{average:.2f} {currency}."
+        )
+        
     else:
         text = t("unknown_question", lang)
 
