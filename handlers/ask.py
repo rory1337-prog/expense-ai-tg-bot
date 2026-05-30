@@ -3,6 +3,7 @@ from aiogram.types import Message
 
 from ai import ai_parse_question
 from database import get_total_spending, get_top_category, get_user_settings
+from locales import t 
 
 router = Router()
 
