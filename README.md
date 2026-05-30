@@ -110,6 +110,16 @@ uber 30
 /export
 ```
 
+## AI Query Examples
+
+Users can ask natural language finance questions:
+
+- "How much did I spend this month?"
+- "What is my top category this week?"
+- "How much did I spend on food this month?"
+- "Сколько я потратил на транспорт за неделю?"
+- "Ile wydałem na groceries w tym miesiącu?"
+
 ## Receipt Parsing
 
 1. User sends receipt photo
