@@ -7,6 +7,7 @@ from database import (
     get_top_category,
     get_category_spending,
     get_user_settings,
+    get_biggest_expenses
 )
 from locales import t 
 
@@ -52,6 +53,29 @@ async def handle_finance_question(message: Message, question: str):
             text = (
                 f'You spent {total:.2f} {currency}'
                 f'on {category} during {result['period']}.'
+            )
+
+    elif result['intent'] == 'biggest_expenses':
+        expenses = get_biggest_expenses(
+            message.chat.id,
+            result['period']
+        )
+        if not expenses:
+            text = t('no_expenses_period', lang)
+        else:
+            lines = [
+                (
+                    f"{i}. {item['name']} — "
+                    f"{item['amount']:.2f} "
+                    f"{currency} "
+                    f"({item['category']})"
+                )
+                for i, item in enumerate(expenses, start=1)
+            ]
+            text = (
+                f"Biggest expenses during "
+                f"{result['period']}:\n\n"
+                + "\n".join(lines)
             )
     else:
         text = t("unknown_question", lang)
