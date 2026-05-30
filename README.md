@@ -1,4 +1,5 @@
 # ExpensesAI Telegram Bot
+![CI](https://github.com/rory1337-prog/expense-ai-tg-bot/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.x-blue)
 ![Docker](https://img.shields.io/badge/Docker-enabled-blue)
 ![Tests](https://img.shields.io/badge/tests-pytest-green)
