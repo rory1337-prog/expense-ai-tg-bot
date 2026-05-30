@@ -23,9 +23,15 @@ jobs:
         run: pip install -r requirements.txt pytest
 
       - name: Compile Python files
+        env:
+          BOTTOKEN: test_token
+          OPENAI_API_KEY: test_key
         run: python -m compileall .
 
       - name: Run tests
+        env:
+          BOTTOKEN: test_token
+          OPENAI_API_KEY: test_key
         run: PYTHONPATH=. pytest
 
       - name: Build Docker image
