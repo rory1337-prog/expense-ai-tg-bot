@@ -12,6 +12,7 @@ Built with Python, aiogram, OpenAI API, SQLite, and Docker.
 ## Features
 
 - AI receipt parsing using OpenAI Vision
+- Conversational AI finance analytics (/ask)
 - Expense & income tracking
 - Multi-language support (EN / RU / PL)
 - Daily / weekly / monthly reports
@@ -117,8 +118,12 @@ Users can ask natural language finance questions:
 - "How much did I spend this month?"
 - "What is my top category this week?"
 - "How much did I spend on food this month?"
+- "What are my biggest expenses this month?"
+- "What is my average daily spending this month?"
 - "Сколько я потратил на транспорт за неделю?"
+- "Какие у меня самые большие расходы?"
 - "Ile wydałem na groceries w tym miesiącu?"
+- "Jakie są moje średnie wydatki?"
 
 ## Receipt Parsing
 
@@ -179,9 +184,8 @@ OPENAI_API_KEY=your_openai_api_key
 
 ## Roadmap
 
-- Inline keyboard UI improvements
+- Conversational AI insights expansion
 - PostgreSQL migration
-- AI financial assistant (/ask)
 - Budget limits & notifications
 - Webhook support
 - OCR fallback system
@@ -195,8 +199,8 @@ Production MVP deployed on VPS with Docker and active development ongoing.
 
 Current focus:
 
+- conversational AI analytics
 - UX improvements
-- AI-powered analytics
-- database scalability
+- PostgreSQL migration
 - testing & reliability
-- infrastructure improvements
+- infrastructure scalability
