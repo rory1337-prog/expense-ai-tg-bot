@@ -305,6 +305,47 @@ def get_total_spending(chat_id, period):
         
         return result or 0
     
+def get_category_spending(chat_id, category, period):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        if period == "week":
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND category = ?
+                AND datetime(created_at) >= datetime('now', '-7 days')
+            """, (chat_id, category))
+
+        elif period == 'month':
+            cursor.execute("""
+                SELECT SUM(amount)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND category = ?
+                AND datetime(created_at) >= datetime('now', '-30 days')
+            """, (chat_id, category))
+
+        elif period == 'today':
+            cursor.execute("""
+                SELECT SUM(today)
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND category = ?
+                AND date(created_at) = date('now')
+            """, (chat_id, category))
+
+        else:
+            return 0
+        
+        result = cursor.fetchone()[0]
+        return result or 0
+        
+    
 def get_top_category(chat_id, period):
     with get_connection() as conn:
         cursor = conn.cursor()

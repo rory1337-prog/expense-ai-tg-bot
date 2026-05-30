@@ -142,10 +142,18 @@ async def ai_parse_photo(image_path):
     except Exception:
         logger.exception("AI receipt parsing failed")
         return None
-    
+
+
 async def ai_parse_question(question):
+    fallback = {
+        "intent": "unknown",
+        "period": "month",
+        "language": "en",
+        "category": None,
+    }
+
     if not OPENAI_API_KEY:
-        return {"intent": "unknown", "period": "month"}
+        return fallback
 
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -161,22 +169,39 @@ async def ai_parse_question(question):
                     {
                         "type": "input_text",
                         "text": (
-                            "Parse the user's finance question into intent and period.\n"
+                            "Parse the user's finance question into structured JSON.\n"
                             "The question can be in English, Russian, Polish, or mixed language.\n\n"
                             "Supported intents:\n"
-                            "- total_spending: asks how much was spent\n"
+                            "- total_spending: asks how much was spent in a period\n"
                             "- top_category: asks biggest/top spending category\n"
+                            "- category_spending: asks how much was spent in a specific category\n"
                             "- unknown: not supported\n\n"
                             "Supported periods:\n"
                             "- today\n"
                             "- week\n"
                             "- month\n\n"
-                            "Detect the language of the question.\n"
+                            "Supported categories:\n"
+                            "- food\n"
+                            "- groceries\n"
+                            "- transport\n"
+                            "- shopping\n"
+                            "- health\n"
+                            "- entertainment\n"
+                            "- bills\n"
+                            "- services\n"
+                            "- education\n"
+                            "- other\n\n"
+                            "Rules:\n"
+                            "- If the question asks about a specific category, use category_spending.\n"
+                            "- If no category is mentioned, category must be null.\n"
+                            "- Detect the language of the question: en, ru, or pl.\n"
+                            "- Return only structured JSON.\n\n"
                             "Examples:\n"
-                            "сколько я потратил сегодня? -> total_spending, today\n"
-                            "ile wydałem w tym tygodniu? -> total_spending, week\n"
-                            "what is my top category this month? -> top_category, month\n\n"
-                            "Return only structured JSON.\n\n"
+                            "сколько я потратил сегодня? -> total_spending, today, null, ru\n"
+                            "ile wydałem w tym tygodniu? -> total_spending, week, null, pl\n"
+                            "what is my top category this month? -> top_category, month, null, en\n"
+                            "how much did i spend on food this month? -> category_spending, month, food, en\n"
+                            "сколько ушло на транспорт за неделю? -> category_spending, week, transport, ru\n\n"
                             f"Question: {question}"
                         ),
                     }
@@ -193,7 +218,12 @@ async def ai_parse_question(question):
                     "properties": {
                         "intent": {
                             "type": "string",
-                            "enum": ["total_spending", "top_category", "unknown"],
+                            "enum": [
+                                "total_spending",
+                                "top_category",
+                                "category_spending",
+                                "unknown",
+                            ],
                         },
                         "period": {
                             "type": "string",
@@ -201,10 +231,26 @@ async def ai_parse_question(question):
                         },
                         "language": {
                             "type": "string",
-                            "enum": ["en", "ru", "pl"]
-                        }
+                            "enum": ["en", "ru", "pl"],
+                        },
+                        "category": {
+                            "type": ["string", "null"],
+                            "enum": [
+                                "food",
+                                "groceries",
+                                "transport",
+                                "shopping",
+                                "health",
+                                "entertainment",
+                                "bills",
+                                "services",
+                                "education",
+                                "other",
+                                None,
+                            ],
+                        },
                     },
-                    "required": ["intent", "period", "language"],
+                    "required": ["intent", "period", "language", "category"],
                 },
                 "strict": True,
             }
@@ -216,12 +262,16 @@ async def ai_parse_question(question):
             response = await client.post(
                 "https://api.openai.com/v1/responses",
                 headers=headers,
-                json=payload
+                json=payload,
             )
 
         if response.status_code != 200:
-            logger.error("OpenAI question parse error %s: %s", response.status_code, response.text)
-            return {"intent": "unknown", "period": "month"}
+            logger.error(
+                "OpenAI question parse error %s: %s",
+                response.status_code,
+                response.text,
+            )
+            return fallback
 
         data = response.json()
         output_text = data["output"][0]["content"][0]["text"]
@@ -230,12 +280,13 @@ async def ai_parse_question(question):
         return {
             "intent": result["intent"],
             "period": result["period"],
-            "language": result["language"]
+            "language": result["language"],
+            "category": result["category"],
         }
 
     except Exception:
         logger.exception("AI question parsing failed")
-        return {"intent": "unknown", "period": "month"}
+        return fallback
 
 
 def classify_message(text):
