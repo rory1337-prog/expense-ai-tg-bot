@@ -400,3 +400,55 @@ def get_top_category(chat_id, period):
         "category": result[0],
         "total": result[1]
     }
+
+def get_biggest_expenses(chat_id, period, limit=5):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        if period == "week":
+            cursor.execute("""
+                SELECT name, amount, category, created_at
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-7 days')
+                ORDER BY amount DESC
+                LIMIT ?
+            """, (chat_id, limit))
+
+        elif period == "month":
+            cursor.execute("""
+                SELECT name, amount, category, created_at
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND datetime(created_at) >= datetime('now', '-30 days')
+                ORDER BY amount DESC
+                LIMIT ?
+            """, (chat_id, limit))
+
+        elif period == "today":
+            cursor.execute("""
+                SELECT name, amount, category, created_at
+                FROM entries
+                WHERE chat_id = ?
+                AND type = 'expense'
+                AND date(created_at) = date('now')
+                ORDER BY amount DESC
+                LIMIT ?
+            """, (chat_id, limit))
+
+        else:
+            return []
+
+        rows = cursor.fetchall()
+
+    return [
+        {
+            "name": row[0],
+            "amount": row[1],
+            "category": row[2],
+            "created_at": row[3],
+        }
+        for row in rows
+    ]

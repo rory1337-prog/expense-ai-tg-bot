@@ -37,3 +37,10 @@ def test_classify_category_question():
     )
 
     assert result == "question"
+
+def test_classify_biggest_expenses_question():
+    result = classify_message(
+        "what are my biggest expenses this month"
+    )
+
+    assert result == "question"

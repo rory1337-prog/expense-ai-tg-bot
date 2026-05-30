@@ -172,6 +172,7 @@ async def ai_parse_question(question):
                             "Parse the user's finance question into structured JSON.\n"
                             "The question can be in English, Russian, Polish, or mixed language.\n\n"
                             "Supported intents:\n"
+                            "- biggest_expenses: asks for largest/biggest expenses or purchases\n"
                             "- total_spending: asks how much was spent in a period\n"
                             "- top_category: asks biggest/top spending category\n"
                             "- category_spending: asks how much was spent in a specific category\n"
@@ -200,6 +201,7 @@ async def ai_parse_question(question):
                             "сколько я потратил сегодня? -> total_spending, today, null, ru\n"
                             "ile wydałem w tym tygodniu? -> total_spending, week, null, pl\n"
                             "what is my top category this month? -> top_category, month, null, en\n"
+                            "what are my biggest expenses this month? -> biggest_expenses, month, null, en\n"
                             "how much did i spend on food this month? -> category_spending, month, food, en\n"
                             "сколько ушло на транспорт за неделю? -> category_spending, week, transport, ru\n\n"
                             f"Question: {question}"
@@ -222,6 +224,7 @@ async def ai_parse_question(question):
                                 "total_spending",
                                 "top_category",
                                 "category_spending",
+                                "biggest_expenses",
                                 "unknown",
                             ],
                         },
@@ -311,6 +314,10 @@ def classify_message(text):
         "on bills",
         "on services",
         "on education",
+        "biggest expenses",
+        "largest expenses",
+        "biggest purchases",
+        "largest purchases",
 
         "сколько",
         "потратил",
@@ -328,6 +335,9 @@ def classify_message(text):
         "на счета",
         "на услуги",
         "на образование",
+        "самые большие расходы",
+        "крупные расходы",
+        "самые дорогие покупки",
 
         "ile",
         "wydałem",
@@ -342,6 +352,9 @@ def classify_message(text):
         "na rachunki",
         "na usługi",
         "na edukację",
+        "największe wydatki",
+        "najdroższe zakupy",
+
     ]
 
     if text.endswith("?"):
