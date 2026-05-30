@@ -9,6 +9,11 @@ AI-powered Telegram bot for personal finance tracking with OpenAI receipt parsin
 
 Built with Python, aiogram, OpenAI API, SQLite, and Docker.
 
+## 🚀 Public Beta
+
+Try the bot:
+https://t.me/checkexpenses_ai_bot
+
 ## Features
 
 - AI receipt parsing using OpenAI Vision
