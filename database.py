@@ -455,7 +455,7 @@ def get_biggest_expenses(chat_id, period, limit=5):
 
 def get_avarage_daily_spending(chat_id, period):
     with get_connection() as conn:
-        cursor = conn.cursor
+        cursor = conn.cursor()
 
         if period == "week":
             days = 7
