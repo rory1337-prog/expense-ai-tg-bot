@@ -36,7 +36,10 @@ async def ai_parse_photo(image_path):
                     {
                         "type": "input_text",
                         "text": (
-                            "Extract one expense from this receipt image. "
+                            "Extract receipt data from this image. "
+                            "Find the final total amount paid for the whole receipt. "
+                            "Do not use item price, subtotal, VAT, discount, or card payment amount unless it is clearly the final total. "
+                            "Also extract all visible products/items if possible. "
                             "Return only the structured result."
                         ),
                     },
@@ -55,8 +58,20 @@ async def ai_parse_photo(image_path):
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
-                        "name": {"type": "string"},
-                        "amount": {"type": "number"},
+                        "name": {
+                            "type": "string",
+                            "description": (
+                                "Short receipt name, e.g. "
+                                "'Biedronka receipt' or 'Lidl receipt'. "
+                                "Do not use single item name."
+                            ),
+                        },
+                        "amount": {
+                            "type": "number",
+                            "description": (
+                                "Final total amount paid for the whole receipt."
+                            ),
+                        },
                         "category": {
                             "type": "string",
                             "enum": [
@@ -72,8 +87,20 @@ async def ai_parse_photo(image_path):
                                 "other"
                             ],
                         },
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "amount": {"type": "number"}
+                                },
+                                "required": ["name", "amount"]
+                            }
+                        }
                     },
-                    "required": ["name", "amount", "category"],
+                    "required": ["name", "amount", "category", "items"],
                 },
                 "strict": True,
             }
@@ -114,7 +141,13 @@ async def ai_parse_photo(image_path):
 
         expense["name"] = str(expense["name"]).strip()
         expense["amount"] = float(expense["amount"])
+
+        if expense["amount"] <= 0:
+            logger.warning("Invalid receipt total")
+            return None
+        
         expense["category"] = str(expense["category"]).strip().lower()
+        expense["items"] = expense.get("items", [])
 
         allowed = {
             "food",

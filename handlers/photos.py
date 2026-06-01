@@ -14,6 +14,25 @@ router = Router()
 TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 
+def build_receipt_response(entry, currency, lang):
+    response_text = (
+        f"{t('receipt_saved', lang)}:\n"
+        f"{entry['name']} — {entry['amount']:.2f} {currency}\n"
+        f"{t('category', lang)}: {localize_category(entry['category'], lang)}\n"
+    )
+
+    items = entry.get('items', [])
+
+    if items:
+        response_text += "\n🧾 Items:\n"
+
+        for item in items:
+            response_text += (
+                f"• {item['name']} — "
+                f"{float(item['amount']):.2f} {currency}\n"
+            )
+
+    return response_text
 
 @router.message(lambda message: message.photo)
 async def photo_handler(message: Message):
@@ -41,10 +60,7 @@ async def photo_handler(message: Message):
     ok = save_entry(entry, message.chat.id)
 
     if ok:
-        await message.answer(
-            f"{t('receipt_saved', lang)}:\n"
-            f"{entry['name']} — {entry['amount']} {currency}\n"
-            f"{t('category', lang)}: {localize_category(entry['category'], lang)}"
-        )
+        await message.answer(built_receipt_response(entry, currency, lang))
+
     else:
         await message.answer(t("failed_save_receipt", lang))
