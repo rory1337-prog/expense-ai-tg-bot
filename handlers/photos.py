@@ -60,7 +60,7 @@ async def photo_handler(message: Message):
     ok = save_entry(entry, message.chat.id)
 
     if ok:
-        await message.answer(built_receipt_response(entry, currency, lang))
+        await message.answer(build_receipt_response(entry, currency, lang))
 
     else:
         await message.answer(t("failed_save_receipt", lang))
