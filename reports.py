@@ -1,6 +1,7 @@
 # ===== IMPORTS =====
 from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
 from database import get_user_entries, get_connection, get_user_settings
 from locales import t
@@ -228,11 +229,12 @@ def export_data(chat_id):
 
     now = datetime.now().strftime("%Y-%m-%d")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid4().hex(:8)
 
     export_dir = Path("exports")
     export_dir.mkdir(exist_ok=True)
 
-    export_file = export_dir / f"expensesAI_export_{chat_id}_{timestamp}.txt"
+    export_file = export_dir / f"expensesAI_export_{chat_id}_{timestamp}_{unique_id}.txt"
 
     income = sum(item["amount"] for item in entries if item["type"] == "income")
     expense = sum(item["amount"] for item in entries if item["type"] == "expense")
