@@ -108,11 +108,11 @@ async def expense_text_handler(message: Message):
         await income_handler(message)
         return
 
-    if message_type in ["unknown"]:
+    entry = parse_expense(message.text)
+
+    if message_type == "unknown" and not entry:
         await message.answer(t("failed_parse_expense", lang))
         return
-
-    entry = parse_expense(message.text)
 
     if not entry:
         await message.answer(t("failed_parse_expense", lang))
