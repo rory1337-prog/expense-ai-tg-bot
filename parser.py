@@ -131,6 +131,7 @@ def parse_expense(text):
         }
     except (ValueError, IndexError):
         return None
+    
 # ===== INCOME PARSING =====
 def parse_income(text):
     try:
