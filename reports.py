@@ -229,7 +229,7 @@ def export_data(chat_id):
 
     now = datetime.now().strftime("%Y-%m-%d")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    unique_id = uuid4().hex(:8)
+    unique_id = uuid4().hex[:8]
 
     export_dir = Path("exports")
     export_dir.mkdir(exist_ok=True)
