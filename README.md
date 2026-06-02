@@ -198,6 +198,13 @@ OPENAI_API_KEY=your_openai_api_key
 - CI/CD pipeline
 - Web/mobile frontend
 
+## Current MVP limitations
+
+- The current MVP uses SQLite for persistent storage.
+- SQLite is acceptable for a small Telegram bot MVP, but it may become a bottleneck with many concurrent users.
+- Future production scaling should include migration to PostgreSQL.
+- Export files are generated with unique filenames to avoid collisions during concurrent export requests.
+
 ## Status
 
 Production MVP deployed on VPS with Docker and active development ongoing.
