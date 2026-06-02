@@ -127,7 +127,7 @@ def parse_expense(text):
             'amount': amount,
             'category': detect_category(name),
             'type': 'expense',
-            'created_at': datetime.now().replace(microsecond=0).isoformat
+            'created_at': datetime.now().replace(microsecond=0).isoformat()
         }
     except (ValueError, IndexError):
         return None

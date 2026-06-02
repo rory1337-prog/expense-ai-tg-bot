@@ -98,34 +98,31 @@ async def expense_text_handler(message: Message):
     lang = settings["language"]
     currency = settings["currency"]
 
+    entry = parse_expense(message.text)
+
+    if entry:
+        ok = save_entry(entry, message.chat.id)
+
+        if ok:
+            await message.answer(
+                f"{t('expense_saved', lang)}:\n"
+                f"{entry['name']} — {entry['amount']} {currency}\n"
+                f"{t('category', lang)}: {localize_category(entry['category'], lang)}"
+            )
+        else:
+            await message.answer(t("failed_save_expense", lang))
+
+        return
+    
     message_type = await ai_classify_message(message.text)
 
     if message_type == "question":
         await handle_finance_question(message, message.text)
         return
-
+    
     if message_type == "income":
         await income_handler(message)
         return
-
-    entry = parse_expense(message.text)
-
-    if message_type == "unknown" and not entry:
-        await message.answer(t("failed_parse_expense", lang))
-        return
-
-    if not entry:
-        await message.answer(t("failed_parse_expense", lang))
-        return
-
-    ok = save_entry(entry, message.chat.id)
-
-    if ok:
-        await message.answer(
-            f"{t('expense_saved', lang)}:\n"
-            f"{entry['name']} — {entry['amount']} {currency}\n"
-            f"{t('category', lang)}: {localize_category(entry['category'], lang)}"
-        )
-    else:
-        await message.answer(t("failed_save_expense", lang))
+    
+    await message.answer(t('failed_parse_expense', lang))
         
