@@ -97,16 +97,27 @@ def detect_category(name):
 def parse_expense(text):
     try:
         parts = text.split()
-        
+
         if len(parts) < 2:
             return None
         
-        amount = float(parts[-1])
+        amount = None
+        name_parts = None
 
+        try:
+            amount = float(parts[-1])
+            name_parts = parts[:-1]
+        except ValueError:
+            try:
+                amount = float(parts[0])
+                name_parts = parts[1:]
+            except ValueError:
+                return None
+            
         if amount <= 0:
             return None
         
-        name = " ".join(parts[:-1]).strip()
+        name = " ".join(name_parts).strip()
 
         if not name:
             return None
@@ -116,11 +127,10 @@ def parse_expense(text):
             'amount': amount,
             'category': detect_category(name),
             'type': 'expense',
-            'created_at': datetime.now().replace(microsecond=0).isoformat()
+            'created_at': datetime.now().replace(microsecond=0).isoformat
         }
     except (ValueError, IndexError):
         return None
-    
 # ===== INCOME PARSING =====
 def parse_income(text):
     try:
