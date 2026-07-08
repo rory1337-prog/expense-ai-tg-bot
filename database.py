@@ -8,6 +8,7 @@ from db.models import Entry
 from db import models
 from repositories.entries import EntryRepository
 from repositories.user_settings import UserSettingsRepository
+from services.expense_service import ExpenseService
 
 logger = logging.getLogger(__name__)
 
@@ -22,18 +23,7 @@ def init_db():
 # ===== SAVE OPERATIONS =====
 def save_entry(entry, chat_id):
     try:
-        db_entry = Entry(
-            chat_id=str(chat_id),
-            name=entry["name"],
-            amount=entry["amount"],
-            category=entry["category"],
-            type=entry["type"],
-            created_at=entry["created_at"],
-        )
-
-        EntryRepository.save(db_entry)
-
-        return True
+        return ExpenseService.save_entry(entry, chat_id)
 
     except Exception:
         logger.exception("Failed to save entry")
@@ -41,7 +31,7 @@ def save_entry(entry, chat_id):
     
 # ===== GET OPERATIONS =====
 def get_user_entries(chat_id):
-    rows = EntryRepository.get_user_entries(str(chat_id))
+    rows = ExpenseService.get_user_entries(chat_id)
 
     return [
         {
@@ -77,34 +67,35 @@ def delete_entry_by_id(chat_id, entry_id):
 
 
 def delete_entry_by_number(chat_id, number):
-    entries = get_user_entries(chat_id)
-    expense_items = [item for item in entries if item["type"] == "expense"]
-
-    if number < 1 or number > len(expense_items):
+    entry = ExpenseService.delete_entry_by_number(chat_id, number)
+    if not entry:
         return None
-    
-    entry = expense_items[number - 1]
-    delete_entry_by_id(chat_id, entry["id"])
-    return entry
+    return {
+        "id": entry.id,
+        "name": entry.name,
+        "amount": entry.amount,
+        "category": entry.category,
+        "type": entry.type,
+        "created_at": entry.created_at,
+    }
 
 
 # ===== UPDATE OPERATIONS =====
 def update_entry_by_number(chat_id, number, name, amount):
-    entries = get_user_entries(chat_id)
-    expense_items = [item for item in entries if item["type"] == "expense"]
+    entry = ExpenseService.update_entry_by_number(
+        chat_id,
+        number,
+        name,
+        amount,
+    )
 
-    if number < 1 or number > len(expense_items):
+    if not entry:
         return None
-    
-    entry = expense_items[number - 1]
 
-    if not update_entry_by_id(chat_id, entry["id"], name, amount):
-        return None
-    
     return {
-        "name": name,
-        "amount": amount,
-        "category": detect_category(name),
+        "name": entry.name,
+        "amount": entry.amount,
+        "category": entry.category,
     }
 
 def update_entry_by_id(chat_id, entry_id, name, amount):
