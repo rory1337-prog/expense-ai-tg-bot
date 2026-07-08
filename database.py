@@ -62,7 +62,30 @@ def get_user_entries(chat_id):
     ]
 
 # ===== DELETE OPERATIONS =====
+def delete_entry_by_ia(chat_id, entry_id):
+    with SessionLocal() as session:
+        stmt = select(Entry).where(
+            Entry.chat_id == str(chat_id),
+            Entry.id == entry_id,
+        )
 
+        entry = session.execute(stmt).scalar_one_or_none()
+
+        if not entry:
+            return None
+        
+        deleted_entry = {
+            "id": entry.id,
+            "name": entry.name,
+            "amount": entry.amount,
+            "category": entry.category,
+            "type": entry.type,
+            "created_at": entry.created_at,
+        }
+
+        session.delete(entry)
+        session.commit()
+    return deleted_entry
 
 
 def delete_entry_by_number(chat_id, number):
