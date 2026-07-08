@@ -7,6 +7,7 @@ from db.session import Base, engine
 from db.models import Entry
 from db import models
 from repositories.entries import EntryRepository
+from repositories.user_settings import UserSettingsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -122,64 +123,39 @@ def update_entry_by_id(chat_id, entry_id, name, amount):
 
 
 def get_user_settings(chat_id):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT language, currency
-            FROM user_settings
-            WHERE chat_id = ?
-        """, (chat_id,))
-
-        row = cursor.fetchone()
-
-        if not row:
-            cursor.execute("""
-                INSERT INTO user_settings (chat_id, language, currency)
-                VALUES (?, ?, ?)
-            """, (chat_id, "en", "PLN"))
-            
-            return {"language": "en", "currency": "PLN"}
-
-    return {"language": row[0], "currency": row[1]}
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        settings = UserSettingsRepository.create(str(chat_id))
+    return {
+        "language": settings.language,
+        "currency": settings.currency,
+    }
 
 
 def set_user_language(chat_id, language):
-    get_user_settings(chat_id)
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        settings = UserSettingsRepository.create(str(chat_id))
+    settings.language = language
+    UserSettingsRepository.update(settings)
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE user_settings
-            SET language = ?
-            WHERE chat_id = ?
-        """, (language, chat_id))
 
 
 def set_user_currency(chat_id, currency):
-    get_user_settings(chat_id)
-
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE user_settings
-            SET currency = ?
-            WHERE chat_id = ?
-        """, (currency, chat_id))
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        settings = UserSettingsRepository.create(str(chat_id))
+    settings.currency = currency
+    UserSettingsRepository.update(settings)
 
 
 def ensure_user_settings(chat_id, language="en", currency="PLN"):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            INSERT OR IGNORE INTO user_settings (chat_id, language, currency)
-            VALUES (?, ?, ?)
-            """,
-            (chat_id, language, currency)
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        UserSettingsRepository.create(
+            str(chat_id),
+            language=language,
+            currency=currency,
         )
 
 def get_total_spending(chat_id, period):
