@@ -1,9 +1,11 @@
 # ===== IMPORTS =====
 import logging
-from db.session import Base, engine
-from db import models
+import sqlite3
 from config import DB_FILE
 from parser import detect_category
+from db.session import Base, engine, SessionLocal
+from db import models
+from db.models import Entry
 
 logger = logging.getLogger(__name__)
 
@@ -18,23 +20,21 @@ def init_db():
 # ===== SAVE OPERATIONS =====
 def save_entry(entry, chat_id):
     try:
-        with get_connection() as conn:
-            cursor = conn.cursor()
+        with SessionLocal() as session:
+            db_entry = Entry(
+                chat_id=str(chat_id),
+                name=entry["name"],
+                amount=entry["amount"],
+                category=entry["category"],
+                type=entry["type"],
+                created_at=entry["created_at"],
+            )
 
-            cursor.execute("""
-                INSERT INTO entries (chat_id, name, amount, category, type, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                chat_id,
-                entry["name"],
-                entry["amount"],
-                entry["category"],
-                entry["type"],
-                entry["created_at"]
-            ))
+            session.add(db_entry)
+            session.commit()
 
         return True
-
+    
     except Exception:
         logger.exception("Failed to save entry")
         return False
