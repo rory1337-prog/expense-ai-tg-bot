@@ -14,7 +14,7 @@ class ExpenseService:
             return None
         entry = expense_items[number - 1]
         EntryRepository.delete(entry)
-        return entry
+        return ExpenseService._entry_to_dict(entry)
     
     @staticmethod
     def update_entry_by_number(chat_id, number, name, amount):
@@ -36,7 +36,11 @@ class ExpenseService:
 
         updated_entry = EntryRepository.update(entry)
 
-        return updated_entry
+        return {
+            "name": updated_entry.name,
+            "amount": updated_entry.amount,
+            "category": updated_entry.category,
+        }
     
     @staticmethod
     def save_entry(entry_data, chat_id):
@@ -55,4 +59,45 @@ class ExpenseService:
     
     @staticmethod
     def get_user_entries(chat_id):
-        return EntryRepository.get_user_entries(str(chat_id))
+        entries = EntryRepository.get_user_entries(str(chat_id))
+        return [ExpenseService._entry_to_dict(entry) for entry in entries]
+    
+    @staticmethod
+    def _entry_to_dict(entry):
+        return {
+            "id": entry.id,
+            "name": entry.name,
+            "amount": entry.amount,
+            "category": entry.category,
+            "type": entry.type,
+            "created_at": entry.created_at,
+        }
+    
+    @staticmethod
+    def delete_entry_by_id(chat_id, entry_id):
+        entry = EntryRepository.get_by_id(str(chat_id), entry_id)
+
+        if not entry:
+            return None
+
+        deleted_entry = ExpenseService._entry_to_dict(entry)
+
+        EntryRepository.delete(entry)
+
+        return deleted_entry
+    
+    @staticmethod
+    def update_entry_by_id(chat_id, entry_id, name, amount):
+        entry = EntryRepository.get_by_id(str(chat_id), entry_id)
+
+        if not entry:
+            return False
+
+        entry.name = name
+        entry.amount = amount
+        entry.category = detect_category(name)
+
+        EntryRepository.update(entry)
+
+        return True
+    

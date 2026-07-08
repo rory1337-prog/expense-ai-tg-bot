@@ -2,7 +2,8 @@ from aiogram import Router
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.fsm.context import FSMContext
 
-from database import delete_entry_by_id, update_entry_by_id, get_user_settings
+from services.expense_service import ExpenseService
+from services.settings_service import SettingsService
 from states.edit_states import EditEntry
 from locales import t
 
@@ -13,7 +14,7 @@ router = Router()
 async def edit_select_callback(callback: CallbackQuery):
     entry_id = callback.data.split(":")[1]
 
-    settings = get_user_settings(callback.message.chat.id)
+    settings = SettingsService.get_user_settings(callback.message.chat.id)
     lang = settings["language"]
 
     actions_menu = InlineKeyboardMarkup(
@@ -36,8 +37,8 @@ async def edit_select_callback(callback: CallbackQuery):
 async def delete_entry_callback(callback: CallbackQuery):
     entry_id = int(callback.data.split(":")[1])
 
-    deleted = delete_entry_by_id(callback.message.chat.id, entry_id)
-    settings = get_user_settings(callback.message.chat.id)
+    deleted = ExpenseService.delete_entry_by_id(callback.message.chat.id, entry_id)
+    settings = SettingsService.get_user_settings(callback.message.chat.id)
     lang = settings["language"]
     currency = settings["currency"]
 
@@ -55,7 +56,7 @@ async def delete_entry_callback(callback: CallbackQuery):
 async def edit_entry_callback(callback: CallbackQuery, state: FSMContext):
     entry_id = int(callback.data.split(":")[1])
 
-    settings = get_user_settings(callback.message.chat.id)
+    settings = SettingsService.get_user_settings(callback.message.chat.id)
     lang = settings["language"]
 
     await state.update_data(entry_id=entry_id)
@@ -68,7 +69,7 @@ async def edit_entry_callback(callback: CallbackQuery, state: FSMContext):
 
 @router.message(EditEntry.waiting_for_new_value)
 async def process_new_entry_value(message: Message, state: FSMContext):
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
     currency = settings["currency"]
 
@@ -90,7 +91,7 @@ async def process_new_entry_value(message: Message, state: FSMContext):
     data = await state.get_data()
     entry_id = data["entry_id"]
 
-    ok = update_entry_by_id(message.chat.id, entry_id, name, amount)
+    ok = ExpenseService.update_entry_by_id(message.chat.id, entry_id, name, amount)
 
     if ok:
         await message.answer(f"{t('updated', lang)}:\n{name} — {amount} {currency}")

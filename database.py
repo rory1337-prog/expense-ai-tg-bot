@@ -2,13 +2,9 @@
 import logging
 import sqlite3
 from config import DB_FILE
-from parser import detect_category
 from db.session import Base, engine
-from db.models import Entry
-from db import models
-from repositories.entries import EntryRepository
-from repositories.user_settings import UserSettingsRepository
 from services.expense_service import ExpenseService
+from services.settings_service import SettingsService
 
 logger = logging.getLogger(__name__)
 
@@ -31,123 +27,45 @@ def save_entry(entry, chat_id):
     
 # ===== GET OPERATIONS =====
 def get_user_entries(chat_id):
-    rows = ExpenseService.get_user_entries(chat_id)
-
-    return [
-        {
-            "id": row.id,
-            "name": row.name,
-            "amount": row.amount,
-            "category": row.category,
-            "type": row.type,
-            "created_at": row.created_at,
-        }
-        for row in rows
-    ]
+    return ExpenseService.get_user_entries(chat_id)
 
 # ===== DELETE OPERATIONS =====
 def delete_entry_by_id(chat_id, entry_id):
-    entry = EntryRepository.get_by_id(str(chat_id), entry_id)
-
-    if not entry:
-        return None
-
-    deleted_entry = {
-        "id": entry.id,
-        "name": entry.name,
-        "amount": entry.amount,
-        "category": entry.category,
-        "type": entry.type,
-        "created_at": entry.created_at,
-    }
-
-    EntryRepository.delete(entry)
-
-    return deleted_entry
+    return ExpenseService.delete_entry_by_id(chat_id, entry_id)
 
 
 def delete_entry_by_number(chat_id, number):
-    entry = ExpenseService.delete_entry_by_number(chat_id, number)
-    if not entry:
-        return None
-    return {
-        "id": entry.id,
-        "name": entry.name,
-        "amount": entry.amount,
-        "category": entry.category,
-        "type": entry.type,
-        "created_at": entry.created_at,
-    }
+    return ExpenseService.delete_entry_by_number(chat_id, number)
 
 
 # ===== UPDATE OPERATIONS =====
 def update_entry_by_number(chat_id, number, name, amount):
-    entry = ExpenseService.update_entry_by_number(
+    return ExpenseService.update_entry_by_number(chat_id, number, name, amount)
+
+def update_entry_by_id(chat_id, entry_id, name, amount):
+    return ExpenseService.update_entry_by_id(
         chat_id,
-        number,
+        entry_id,
         name,
         amount,
     )
 
-    if not entry:
-        return None
-
-    return {
-        "name": entry.name,
-        "amount": entry.amount,
-        "category": entry.category,
-    }
-
-def update_entry_by_id(chat_id, entry_id, name, amount):
-    entry = EntryRepository.get_by_id(str(chat_id), entry_id)
-
-    if not entry:
-        return False
-    
-    entry.name = name
-    entry.amount = amount
-    entry.category = detect_category(name)
-
-    EntryRepository.update(entry)
-
-    return True
-
 
 def get_user_settings(chat_id):
-    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
-    if not settings:
-        settings = UserSettingsRepository.create(str(chat_id))
-    return {
-        "language": settings.language,
-        "currency": settings.currency,
-    }
+    return SettingsService.get_user_settings(chat_id)
 
 
 def set_user_language(chat_id, language):
-    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
-    if not settings:
-        settings = UserSettingsRepository.create(str(chat_id))
-    settings.language = language
-    UserSettingsRepository.update(settings)
+    SettingsService.set_user_language(chat_id, language)
 
 
 
 def set_user_currency(chat_id, currency):
-    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
-    if not settings:
-        settings = UserSettingsRepository.create(str(chat_id))
-    settings.currency = currency
-    UserSettingsRepository.update(settings)
+    SettingsService.set_user_currency(chat_id, currency)
 
 
 def ensure_user_settings(chat_id, language="en", currency="PLN"):
-    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
-    if not settings:
-        UserSettingsRepository.create(
-            str(chat_id),
-            language=language,
-            currency=currency,
-        )
+    SettingsService.ensure_user_settings(chat_id, language, currency)
 
 def get_total_spending(chat_id, period):
     with get_connection() as conn:

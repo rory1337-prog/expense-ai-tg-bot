@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from keyboards.main_menu import build_main_menu
-from database import get_user_settings, ensure_user_settings
+from services.settings_service import SettingsService
 from locales import t, detect_language
 
 router = Router()
@@ -17,9 +17,9 @@ async def start_handler(message: Message):
     telegram_lang = message.from_user.language_code
     detected_lang = detect_language(telegram_lang)
 
-    ensure_user_settings(chat_id, language=detected_lang)
+    SettingsService.ensure_user_settings(chat_id, language=detected_lang)
 
-    settings = get_user_settings(chat_id)
+    settings = SettingsService.get_user_settings(chat_id)
     lang = settings["language"]
 
     await message.answer(
