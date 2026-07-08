@@ -3,6 +3,11 @@ import logging
 import sqlite3
 from config import DB_FILE
 from parser import detect_category
+from db.session import Base, engine
+from db.models import Entry
+from db import models
+from repositories.entries import EntryRepository
+from repositories.user_settings import UserSettingsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -12,47 +17,21 @@ def get_connection():
 
 # ===== DATABASE INIT =====
 def init_db():
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS entries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                chat_id TEXT NOT NULL,
-                name TEXT NOT NULL,
-                amount REAL NOT NULL,
-                category TEXT NOT NULL,
-                type TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )
-        ''')
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS user_settings (
-                chat_id TEXT PRIMARY KEY,
-                language TEXT DEFAULT 'en',
-                currency TEXT DEFAULT 'PLN'
-            )
-        """)
-
+    Base.metadata.create_all(bind=engine)
 
 # ===== SAVE OPERATIONS =====
 def save_entry(entry, chat_id):
     try:
-        with get_connection() as conn:
-            cursor = conn.cursor()
+        db_entry = Entry(
+            chat_id=str(chat_id),
+            name=entry["name"],
+            amount=entry["amount"],
+            category=entry["category"],
+            type=entry["type"],
+            created_at=entry["created_at"],
+        )
 
-            cursor.execute("""
-                INSERT INTO entries (chat_id, name, amount, category, type, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                chat_id,
-                entry["name"],
-                entry["amount"],
-                entry["category"],
-                entry["type"],
-                entry["created_at"]
-            ))
+        EntryRepository.save(db_entry)
 
         return True
 
@@ -62,209 +41,121 @@ def save_entry(entry, chat_id):
     
 # ===== GET OPERATIONS =====
 def get_user_entries(chat_id):
-    with get_connection() as conn:
-        cursor = conn.cursor()
+    rows = EntryRepository.get_user_entries(str(chat_id))
 
-        cursor.execute("""
-            SELECT id, name, amount, category, type, created_at
-            FROM entries
-            WHERE chat_id = ?
-            ORDER BY id DESC
-        """, (chat_id,))
-
-        rows = cursor.fetchall()
-    
-
-    entries = []
-    for row in rows:
-        entries.append({
-            "id": row[0],
-            "name": row[1],
-            "amount": row[2],
-            "category": row[3],
-            "type": row[4],
-            "created_at": row[5]
-        })
-
-    return entries
+    return [
+        {
+            "id": row.id,
+            "name": row.name,
+            "amount": row.amount,
+            "category": row.category,
+            "type": row.type,
+            "created_at": row.created_at,
+        }
+        for row in rows
+    ]
 
 # ===== DELETE OPERATIONS =====
-def delete_last_entry(chat_id):
-    entries = get_user_entries(chat_id)
-    
-    if not entries:
+def delete_entry_by_id(chat_id, entry_id):
+    entry = EntryRepository.get_by_id(str(chat_id), entry_id)
+
+    if not entry:
         return None
-    
-    last_entry = entries[0]
-    entry_id = last_entry['id']
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
+    deleted_entry = {
+        "id": entry.id,
+        "name": entry.name,
+        "amount": entry.amount,
+        "category": entry.category,
+        "type": entry.type,
+        "created_at": entry.created_at,
+    }
 
-        cursor.execute('''
-            DELETE FROM entries
-            WHERE id = ?
-        ''', (entry_id,))
-    
+    EntryRepository.delete(entry)
 
-    return last_entry
+    return deleted_entry
 
 
 def delete_entry_by_number(chat_id, number):
     entries = get_user_entries(chat_id)
-    expense_items = [item for item in entries if item['type'] == 'expense']
-
-    if number < 1 or number > len(expense_items):
-        return None
-    
-    entry_to_delete = expense_items[number - 1]
-    entry_id = entry_to_delete['id']
-
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            DELETE FROM entries
-            WHERE id = ?
-        ''', (entry_id,))
-
-    return entry_to_delete
-
-def delete_entry_by_id(chat_id, entry_id):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT id, name, amount, category, type, created_at
-            FROM entries
-            WHERE chat_id = ? AND id = ?
-        """, (chat_id, entry_id))
-
-        row = cursor.fetchone()
-
-        if not row:
-            return None
-
-        deleted_entry = {
-            "id": row[0],
-            "name": row[1],
-            "amount": row[2],
-            "category": row[3],
-            "type": row[4],
-            "created_at": row[5]
-        }
-
-        cursor.execute("""
-            DELETE FROM entries
-            WHERE chat_id = ? AND id = ?
-        """, (chat_id, entry_id))
-
-    return deleted_entry
-
-# ===== UPDATE OPERATIONS =====
-def update_entry_by_number(chat_id, number, name, amount):
-    entries = get_user_entries(chat_id)
-    expense_items = [item for item in entries if item['type'] == 'expense']
+    expense_items = [item for item in entries if item["type"] == "expense"]
 
     if number < 1 or number > len(expense_items):
         return None
     
     entry = expense_items[number - 1]
-    entry_id = entry['id']
+    delete_entry_by_id(chat_id, entry["id"])
+    return entry
 
-    category = detect_category(name)
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
+# ===== UPDATE OPERATIONS =====
+def update_entry_by_number(chat_id, number, name, amount):
+    entries = get_user_entries(chat_id)
+    expense_items = [item for item in entries if item["type"] == "expense"]
 
-        cursor.execute('''
-            UPDATE entries
-            SET name = ?, amount = ?, category = ?
-            WHERE id = ?
-        ''', (name, amount, category, entry_id))
+    if number < 1 or number > len(expense_items):
+        return None
+    
+    entry = expense_items[number - 1]
 
+    if not update_entry_by_id(chat_id, entry["id"], name, amount):
+        return None
+    
     return {
-        'name': name,
-        'amount': amount,
-        'category': category
+        "name": name,
+        "amount": amount,
+        "category": detect_category(name),
     }
 
 def update_entry_by_id(chat_id, entry_id, name, amount):
-    category = detect_category(name)
+    entry = EntryRepository.get_by_id(str(chat_id), entry_id)
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
+    if not entry:
+        return False
+    
+    entry.name = name
+    entry.amount = amount
+    entry.category = detect_category(name)
 
-        cursor.execute("""
-            UPDATE entries
-            SET name = ?, amount = ?, category = ?
-            WHERE chat_id = ? AND id = ?
-        """, (name, amount, category, chat_id, entry_id))
+    EntryRepository.update(entry)
 
-        updated = cursor.rowcount
-        
-    return updated > 0
+    return True
 
 
 def get_user_settings(chat_id):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT language, currency
-            FROM user_settings
-            WHERE chat_id = ?
-        """, (chat_id,))
-
-        row = cursor.fetchone()
-
-        if not row:
-            cursor.execute("""
-                INSERT INTO user_settings (chat_id, language, currency)
-                VALUES (?, ?, ?)
-            """, (chat_id, "en", "PLN"))
-            
-            return {"language": "en", "currency": "PLN"}
-
-    return {"language": row[0], "currency": row[1]}
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        settings = UserSettingsRepository.create(str(chat_id))
+    return {
+        "language": settings.language,
+        "currency": settings.currency,
+    }
 
 
 def set_user_language(chat_id, language):
-    get_user_settings(chat_id)
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        settings = UserSettingsRepository.create(str(chat_id))
+    settings.language = language
+    UserSettingsRepository.update(settings)
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE user_settings
-            SET language = ?
-            WHERE chat_id = ?
-        """, (language, chat_id))
 
 
 def set_user_currency(chat_id, currency):
-    get_user_settings(chat_id)
-
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE user_settings
-            SET currency = ?
-            WHERE chat_id = ?
-        """, (currency, chat_id))
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        settings = UserSettingsRepository.create(str(chat_id))
+    settings.currency = currency
+    UserSettingsRepository.update(settings)
 
 
 def ensure_user_settings(chat_id, language="en", currency="PLN"):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            INSERT OR IGNORE INTO user_settings (chat_id, language, currency)
-            VALUES (?, ?, ?)
-            """,
-            (chat_id, language, currency)
+    settings = UserSettingsRepository.get_by_chat_id(str(chat_id))
+    if not settings:
+        UserSettingsRepository.create(
+            str(chat_id),
+            language=language,
+            currency=currency,
         )
 
 def get_total_spending(chat_id, period):
@@ -331,7 +222,7 @@ def get_category_spending(chat_id, category, period):
 
         elif period == 'today':
             cursor.execute("""
-                SELECT SUM(today)
+                SELECT SUM(amount)
                 FROM entries
                 WHERE chat_id = ?
                 AND type = 'expense'
