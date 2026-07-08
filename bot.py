@@ -5,7 +5,6 @@ import os
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
-from services.app_service import init_app
 from handlers.start import router as start_router
 from handlers.menu import router as menu_router
 from handlers.reports import router as reports_router
@@ -32,8 +31,6 @@ dp.include_router(ask_router)
 dp.include_router(expenses_router)
 
 async def main():
-    init_app()
-    print('Database initialized...')
     print('Bot started...')
     await dp.start_polling(bot)
 
