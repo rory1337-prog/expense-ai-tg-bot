@@ -1,7 +1,7 @@
 # ===== IMPORTS =====
 import logging
 import sqlite3
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from config import DB_FILE
 from parser import detect_category
 from db.session import Base, engine, SessionLocal
@@ -62,25 +62,7 @@ def get_user_entries(chat_id):
     ]
 
 # ===== DELETE OPERATIONS =====
-def delete_last_entry(chat_id):
-    entries = get_user_entries(chat_id)
-    
-    if not entries:
-        return None
-    
-    last_entry = entries[0]
-    entry_id = last_entry['id']
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            DELETE FROM entries
-            WHERE id = ?
-        ''', (entry_id,))
-    
-
-    return last_entry
 
 
 def delete_entry_by_number(chat_id, number):
