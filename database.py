@@ -1,12 +1,12 @@
 # ===== IMPORTS =====
 import logging
 import sqlite3
-from sqlalchemy import select, delete
 from config import DB_FILE
 from parser import detect_category
-from db.session import Base, engine, SessionLocal
+from db.session import Base, engine
 from db.models import Entry
 from db import models
+from repositories.entries import EntryRepository
 
 logger = logging.getLogger(__name__)
 
@@ -21,34 +21,27 @@ def init_db():
 # ===== SAVE OPERATIONS =====
 def save_entry(entry, chat_id):
     try:
-        with SessionLocal() as session:
-            db_entry = Entry(
-                chat_id=str(chat_id),
-                name=entry["name"],
-                amount=entry["amount"],
-                category=entry["category"],
-                type=entry["type"],
-                created_at=entry["created_at"],
-            )
+        db_entry = Entry(
+            chat_id=str(chat_id),
+            name=entry["name"],
+            amount=entry["amount"],
+            category=entry["category"],
+            type=entry["type"],
+            created_at=entry["created_at"],
+        )
 
-            session.add(db_entry)
-            session.commit()
+        EntryRepository.save(db_entry)
 
         return True
-    
+
     except Exception:
         logger.exception("Failed to save entry")
         return False
     
 # ===== GET OPERATIONS =====
 def get_user_entries(chat_id):
-    with SessionLocal() as session:
-        stmt = (
-            select(Entry)
-            .where(Entry.chat_id == str(chat_id))
-            .order_by(Entry.id.desc())
-        )
-        rows = session.execute(stmt).scalars().all()
+    rows = EntryRepository.get_user_entries(str(chat_id))
+
     return [
         {
             "id": row.id,
@@ -62,126 +55,70 @@ def get_user_entries(chat_id):
     ]
 
 # ===== DELETE OPERATIONS =====
-def delete_entry_by_ia(chat_id, entry_id):
-    with SessionLocal() as session:
-        stmt = select(Entry).where(
-            Entry.chat_id == str(chat_id),
-            Entry.id == entry_id,
-        )
+def delete_entry_by_id(chat_id, entry_id):
+    entry = EntryRepository.get_by_id(str(chat_id), entry_id)
 
-        entry = session.execute(stmt).scalar_one_or_none()
+    if not entry:
+        return None
 
-        if not entry:
-            return None
-        
-        deleted_entry = {
-            "id": entry.id,
-            "name": entry.name,
-            "amount": entry.amount,
-            "category": entry.category,
-            "type": entry.type,
-            "created_at": entry.created_at,
-        }
+    deleted_entry = {
+        "id": entry.id,
+        "name": entry.name,
+        "amount": entry.amount,
+        "category": entry.category,
+        "type": entry.type,
+        "created_at": entry.created_at,
+    }
 
-        session.delete(entry)
-        session.commit()
+    EntryRepository.delete(entry)
+
     return deleted_entry
 
 
 def delete_entry_by_number(chat_id, number):
     entries = get_user_entries(chat_id)
-    expense_items = [item for item in entries if item['type'] == 'expense']
-
-    if number < 1 or number > len(expense_items):
-        return None
-    
-    entry_to_delete = expense_items[number - 1]
-    entry_id = entry_to_delete['id']
-
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            DELETE FROM entries
-            WHERE id = ?
-        ''', (entry_id,))
-
-    return entry_to_delete
-
-def delete_entry_by_id(chat_id, entry_id):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT id, name, amount, category, type, created_at
-            FROM entries
-            WHERE chat_id = ? AND id = ?
-        """, (chat_id, entry_id))
-
-        row = cursor.fetchone()
-
-        if not row:
-            return None
-
-        deleted_entry = {
-            "id": row[0],
-            "name": row[1],
-            "amount": row[2],
-            "category": row[3],
-            "type": row[4],
-            "created_at": row[5]
-        }
-
-        cursor.execute("""
-            DELETE FROM entries
-            WHERE chat_id = ? AND id = ?
-        """, (chat_id, entry_id))
-
-    return deleted_entry
-
-# ===== UPDATE OPERATIONS =====
-def update_entry_by_number(chat_id, number, name, amount):
-    entries = get_user_entries(chat_id)
-    expense_items = [item for item in entries if item['type'] == 'expense']
+    expense_items = [item for item in entries if item["type"] == "expense"]
 
     if number < 1 or number > len(expense_items):
         return None
     
     entry = expense_items[number - 1]
-    entry_id = entry['id']
+    delete_entry_by_id(chat_id, entry["id"])
+    return entry
 
-    category = detect_category(name)
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
+# ===== UPDATE OPERATIONS =====
+def update_entry_by_number(chat_id, number, name, amount):
+    entries = get_user_entries(chat_id)
+    expense_items = [item for item in entries if item["type"] == "expense"]
 
-        cursor.execute('''
-            UPDATE entries
-            SET name = ?, amount = ?, category = ?
-            WHERE id = ?
-        ''', (name, amount, category, entry_id))
+    if number < 1 or number > len(expense_items):
+        return None
+    
+    entry = expense_items[number - 1]
 
+    if not update_entry_by_id(chat_id, entry["id"], name, amount):
+        return None
+    
     return {
-        'name': name,
-        'amount': amount,
-        'category': category
+        "name": name,
+        "amount": amount,
+        "category": detect_category(name),
     }
 
 def update_entry_by_id(chat_id, entry_id, name, amount):
-    category = detect_category(name)
+    entry = EntryRepository.get_by_id(str(chat_id), entry_id)
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
+    if not entry:
+        return False
+    
+    entry.name = name
+    entry.amount = amount
+    entry.category = detect_category(name)
 
-        cursor.execute("""
-            UPDATE entries
-            SET name = ?, amount = ?, category = ?
-            WHERE chat_id = ? AND id = ?
-        """, (name, amount, category, chat_id, entry_id))
+    EntryRepository.update(entry)
 
-        updated = cursor.rowcount
-        
-    return updated > 0
+    return True
 
 
 def get_user_settings(chat_id):
