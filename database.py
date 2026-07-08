@@ -1,11 +1,12 @@
 # ===== IMPORTS =====
 import logging
 import sqlite3
+from sqlalchemy import select
 from config import DB_FILE
 from parser import detect_category
 from db.session import Base, engine, SessionLocal
-from db import models
 from db.models import Entry
+from db import models
 
 logger = logging.getLogger(__name__)
 
@@ -41,31 +42,24 @@ def save_entry(entry, chat_id):
     
 # ===== GET OPERATIONS =====
 def get_user_entries(chat_id):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT id, name, amount, category, type, created_at
-            FROM entries
-            WHERE chat_id = ?
-            ORDER BY id DESC
-        """, (chat_id,))
-
-        rows = cursor.fetchall()
-    
-
-    entries = []
-    for row in rows:
-        entries.append({
-            "id": row[0],
-            "name": row[1],
-            "amount": row[2],
-            "category": row[3],
-            "type": row[4],
-            "created_at": row[5]
-        })
-
-    return entries
+    with SessionLocal() as session:
+        stmt = (
+            select(Entry)
+            .where(Entry.chat_id == str(chat_id))
+            .order_by(Entry.id.desc())
+        )
+        rows = session.execute(stmt).scalars().all()
+    return [
+        {
+            "id": row.id,
+            "name": row.name,
+            "amount": row.amount,
+            "category": row.category,
+            "type": row.type,
+            "created_at": row.created_at,
+        }
+        for row in rows
+    ]
 
 # ===== DELETE OPERATIONS =====
 def delete_last_entry(chat_id):
