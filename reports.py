@@ -3,13 +3,15 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from database import get_user_entries, get_connection, get_user_settings
+from services.expense_service import ExpenseService
+from services.settings_service import SettingsService
+from services.analytics_service import AnalyticsService
 from locales import t
 from locales.categories import localize_category
 
 
 def get_locale_data(chat_id):
-    settings = get_user_settings(chat_id)
+    settings = SettingsService.get_user_settings(chat_id)
     return settings["language"], settings["currency"]
 
 
@@ -17,7 +19,7 @@ def get_locale_data(chat_id):
 def build_report(chat_id):
     lang, currency = get_locale_data(chat_id)
 
-    data = get_user_entries(chat_id)
+    data = ExpenseService.get_user_entries(chat_id)
     expense_items = [item for item in data if item["type"] == "expense"]
 
     if not expense_items:
@@ -41,62 +43,31 @@ def build_report(chat_id):
 def build_period_report(chat_id, period):
     lang, currency = get_locale_data(chat_id)
 
-    conn = get_connection()
-    cursor = conn.cursor()
-
     if period == "today":
         title = f"📅 {t('today', lang)}"
-        query = '''
-            SELECT id, name, amount, category, created_at
-            FROM entries
-            WHERE chat_id = ?
-                AND type = "expense"
-                AND date(created_at) = date("now", "localtime")
-            ORDER BY id DESC
-        '''
-
     elif period == "week":
         title = f"📆 {t('week', lang)}"
-        query = '''
-            SELECT id, name, amount, category, created_at
-            FROM entries
-            WHERE chat_id = ?
-                AND type = "expense"
-                AND date(created_at) >= date("now", "localtime", "-6 days")
-                AND date(created_at) <= date("now", "localtime")
-            ORDER BY id DESC
-        '''
-
     elif period == "month":
         title = f"🗓 {t('month', lang)}"
-        query = '''
-            SELECT id, name, amount, category, created_at
-            FROM entries
-            WHERE chat_id = ?
-                AND type = "expense"
-                AND strftime("%Y-%m", created_at) = strftime("%Y-%m", "now", "localtime")
-            ORDER BY id DESC
-        '''
-
     else:
-        conn.close()
         return t("unknown_period", lang)
 
-    cursor.execute(query, (chat_id,))
-    rows = cursor.fetchall()
-    conn.close()
+    rows = AnalyticsService.get_expenses_for_period(chat_id, period)
 
     if not rows:
         return f"{title}\n\n{t('no_expenses', lang)}"
 
-    total = sum(row[2] for row in rows)
+    total = sum(item["amount"] for item in rows)
 
     text = f"{title}\n"
     text += f"{t('total', lang)}: {total:.2f} {currency}\n\n"
 
-    for i, row in enumerate(rows, start=1):
-        _, name, amount, category, created_at = row
-        text += f"{i}. {name} ({amount:.2f} {currency}) [{localize_category(category, lang)}]\n"
+    for i, item in enumerate(rows, start=1):
+        text += (
+            f'{i}. {item["name"]} '
+            f'({item["amount"]:.2f} {currency}) '
+            f'[{localize_category(item["category"], lang)}]\n'
+        )
 
     return text
 
@@ -105,7 +76,7 @@ def build_period_report(chat_id, period):
 def build_balance(chat_id):
     lang, currency = get_locale_data(chat_id)
 
-    data = get_user_entries(chat_id)
+    data = ExpenseService.get_user_entries(chat_id)
 
     income_items = [item for item in data if item["type"] == "income"]
     expense_items = [item for item in data if item["type"] == "expense"]
@@ -125,70 +96,16 @@ def build_balance(chat_id):
 def build_analytics(chat_id):
     lang, currency = get_locale_data(chat_id)
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    balance_data = AnalyticsService.get_balance_data(chat_id)
+    income_total = balance_data["income_total"]
+    expense_total = balance_data["expense_total"]
+    balance = balance_data["balance"]
 
-    cursor.execute("""
-        SELECT
-            SUM(CASE WHEN type='income' THEN amount ELSE 0 END),
-            SUM(CASE WHEN type='expense' THEN amount ELSE 0 END)
-        FROM entries
-        WHERE chat_id = ?
-    """, (chat_id,))
+    today_expense = AnalyticsService.get_today_expense(chat_id)
+    month_expense = AnalyticsService.get_month_expense(chat_id)
 
-    income_total, expense_total = cursor.fetchone()
-    income_total = income_total or 0
-    expense_total = expense_total or 0
-    balance = income_total - expense_total
-
-    today = datetime.now().date().isoformat()
-
-    cursor.execute('''
-        SELECT SUM(amount)
-        FROM entries
-        WHERE chat_id = ?
-        AND type = 'expense'
-        AND date(created_at) = ?
-    ''', (chat_id, today))
-
-    today_expense = cursor.fetchone()[0] or 0
-
-    month = datetime.now().strftime("%Y-%m")
-
-    cursor.execute('''
-        SELECT SUM(amount)
-        FROM entries
-        WHERE chat_id = ?
-        AND type = 'expense'
-        AND strftime('%Y-%m', created_at) = ?
-    ''', (chat_id, month))
-
-    month_expense = cursor.fetchone()[0] or 0
-
-    cursor.execute("""
-        SELECT category, SUM(amount) as total
-        FROM entries
-        WHERE chat_id = ?
-        AND type = 'expense'
-        GROUP BY category
-        ORDER BY total DESC
-        LIMIT 3
-    """, (chat_id,))
-
-    categories = cursor.fetchall()
-
-    cursor.execute("""
-        SELECT name, amount
-        FROM entries
-        WHERE chat_id = ?
-        AND type = 'expense'
-        ORDER BY id DESC
-        LIMIT 5
-    """, (chat_id,))
-
-    last_expenses = cursor.fetchall()
-
-    conn.close()
+    categories = AnalyticsService.get_top_categories(chat_id, limit=3)
+    last_expenses = AnalyticsService.get_last_expenses(chat_id, limit=5)
 
     text = f"📊 {t('analytics', lang)}\n\n"
 
@@ -222,7 +139,7 @@ def build_analytics(chat_id):
 def export_data(chat_id):
     lang, currency = get_locale_data(chat_id)
 
-    entries = get_user_entries(chat_id)
+    entries = ExpenseService.get_user_entries(chat_id)
 
     if not entries:
         return None

@@ -1,7 +1,8 @@
 from aiogram import Router
 from aiogram.types import Message
 
-from database import save_entry, get_user_settings
+from services.expense_service import ExpenseService
+from services.settings_service import SettingsService
 from parser import parse_expense, parse_income
 from locales import t
 from locales.categories import localize_category
@@ -27,7 +28,7 @@ router = Router()
     ]
 )
 async def income_handler(message: Message):
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
     currency = settings["currency"]
 
@@ -50,7 +51,7 @@ async def income_handler(message: Message):
         await message.answer(t("failed_parse_income", lang))
         return
 
-    ok = save_entry(entry, message.chat.id)
+    ok = ExpenseService.save_entry(entry, message.chat.id)
 
     if ok:
         await message.answer(
@@ -94,14 +95,14 @@ async def income_handler(message: Message):
     ]
 )
 async def expense_text_handler(message: Message):
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
     currency = settings["currency"]
 
     entry = parse_expense(message.text)
 
     if entry:
-        ok = save_entry(entry, message.chat.id)
+        ok = ExpenseService.save_entry(entry, message.chat.id)
 
         if ok:
             await message.answer(

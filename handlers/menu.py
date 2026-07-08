@@ -1,7 +1,8 @@
 from aiogram import Router
 from aiogram.types import Message
 
-from database import get_user_entries, get_user_settings
+from services.expense_service import ExpenseService
+from services.settings_service import SettingsService
 from keyboards.edit_menu import build_edit_menu
 from keyboards.buttons import b
 from locales import t
@@ -15,7 +16,7 @@ router = Router()
     b("add_expense", "pl"),
 ])
 async def add_expense_handler(message: Message):
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
     await message.answer(t("send_expense_example", lang))
@@ -27,10 +28,10 @@ async def add_expense_handler(message: Message):
     b("edit", "pl"),
 ])
 async def edit_handler(message: Message):
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
-    entries = get_user_entries(message.chat.id)
+    entries = ExpenseService.get_user_entries(message.chat.id)
 
     if not entries:
         await message.answer(t("no_entries_to_edit", lang))

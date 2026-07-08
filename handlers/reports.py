@@ -12,7 +12,7 @@ from reports import (
     export_data
 )
 
-from database import get_user_settings
+from services.settings_service import SettingsService
 from locales import t
 
 router = Router()
@@ -24,7 +24,7 @@ router = Router()
     b("reports", "pl"),
 ])
 async def reports_handler(message: Message):
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings['language']
 
     await message.answer(
@@ -78,7 +78,7 @@ async def analytics_callback(callback: CallbackQuery):
 async def export_callback(callback: CallbackQuery):
     export_file = export_data(callback.message.chat.id)
 
-    settings = get_user_settings(callback.message.chat.id)
+    settings = SettingsService.get_user_settings(callback.message.chat.id)
     lang = settings["language"]
 
     if not export_file:
