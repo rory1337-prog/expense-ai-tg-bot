@@ -1,6 +1,7 @@
 # ===== IMPORTS =====
 import logging
-import sqlite3
+from db.session import Base, engine
+from db import models
 from config import DB_FILE
 from parser import detect_category
 
@@ -12,29 +13,7 @@ def get_connection():
 
 # ===== DATABASE INIT =====
 def init_db():
-    with get_connection() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS entries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                chat_id TEXT NOT NULL,
-                name TEXT NOT NULL,
-                amount REAL NOT NULL,
-                category TEXT NOT NULL,
-                type TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )
-        ''')
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS user_settings (
-                chat_id TEXT PRIMARY KEY,
-                language TEXT DEFAULT 'en',
-                currency TEXT DEFAULT 'PLN'
-            )
-        """)
-
+    Base.metadata.create_all(bind=engine)
 
 # ===== SAVE OPERATIONS =====
 def save_entry(entry, chat_id):
@@ -331,7 +310,7 @@ def get_category_spending(chat_id, category, period):
 
         elif period == 'today':
             cursor.execute("""
-                SELECT SUM(today)
+                SELECT SUM(amount)
                 FROM entries
                 WHERE chat_id = ?
                 AND type = 'expense'
