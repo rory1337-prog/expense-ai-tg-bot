@@ -2,14 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message
 
 from ai import ai_parse_question
-from database import (
-    get_total_spending,
-    get_top_category,
-    get_category_spending,
-    get_user_settings,
-    get_biggest_expenses,
-    get_avarage_daily_spending
-)
+from services.analytics_service import AnalyticsService
+from services.settings_service import SettingsService
 from locales import t 
 
 router = Router()
@@ -18,17 +12,17 @@ router = Router()
 async def handle_finance_question(message: Message, question: str):
     result = await ai_parse_question(question)
     lang = result["language"]
-    settings = get_user_settings(message.chat.id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     currency = settings["currency"]
 
     if result["intent"] == "total_spending":
-        total = get_total_spending(message.chat.id, result["period"])
+        total = AnalyticsService.get_total_spending(message.chat.id, result["period"])
         text = t("spent_period", lang).format(
             total=f"{total:.2f}", currency=currency, period=result["period"]
         )
 
     elif result["intent"] == "top_category":
-        top = get_top_category(message.chat.id, result["period"])
+        top = AnalyticsService.get_top_category(message.chat.id, result["period"])
         if not top:
             text = t("no_expenses_period", lang)
         else:
@@ -45,7 +39,7 @@ async def handle_finance_question(message: Message, question: str):
         if not category:
             text = t('unknown_question', lang)
         else:
-            total = get_category_spending(
+            total = AnalyticsService.get_category_spending(
                 message.chat.id,
                 category,
                 result['period']
@@ -53,11 +47,11 @@ async def handle_finance_question(message: Message, question: str):
 
             text = (
                 f'You spent {total:.2f} {currency}'
-                f'on {category} during {result['period']}.'
+                f'on {category} during {result["period"]}.'
             )
 
     elif result['intent'] == 'biggest_expenses':
-        expenses = get_biggest_expenses(
+        expenses = AnalyticsService.get_biggest_expenses(
             message.chat.id,
             result['period']
         )
@@ -80,7 +74,7 @@ async def handle_finance_question(message: Message, question: str):
             )
 
     elif result['intent'] == 'average_daily_spending':
-        average = get_avarage_daily_spending(
+        average = AnalyticsService.get_avarage_daily_spending(
             message.chat.id,
             result['period']
         )

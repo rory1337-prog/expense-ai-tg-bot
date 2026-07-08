@@ -146,3 +146,27 @@ class EntryRepository:
             stmt = stmt.order_by(Entry.id.desc())
 
             return session.execute(stmt).scalars().all()
+
+    @staticmethod
+    def get_expense_sum_for_period(chat_id: str, period: str):
+        with SessionLocal() as session:
+            stmt = select(func.sum(Entry.amount)).where(
+                Entry.chat_id == str(chat_id),
+                Entry.type == "expense",
+            )
+
+            if period == "today":
+                stmt = stmt.where(func.date(Entry.created_at) == func.date("now", "localtime"))
+            elif period == "week":
+                stmt = stmt.where(
+                    func.date(Entry.created_at) >= func.date("now", "localtime", "-6 days"),
+                    func.date(Entry.created_at) <= func.date("now", "localtime"),
+                )
+            elif period == "month":
+                stmt = stmt.where(
+                    func.strftime("%Y-%m", Entry.created_at) == func.strftime("%Y-%m", "now", "localtime")
+                )
+            else:
+                return 0
+
+            return session.execute(stmt).scalar() or 0
