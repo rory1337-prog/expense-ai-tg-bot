@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 # ===== ENVIRONMENT =====
 load_dotenv(
     dotenv_path=Path(__file__).with_name(".env"),
-    override=True
+    override=False
 )
 
 BOT_TOKEN = os.getenv("BOTTOKEN", "").strip()
@@ -17,7 +17,8 @@ if not BOT_TOKEN:
 
 # ===== PATHS =====
 BASE_DIR = Path(__file__).parent
-DB_FILE = BASE_DIR / "expenses.db"
+DB_FILE = os.getenv("DB_FILE", "expenses.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_FILE}")
 UPDATE_FILE = BASE_DIR / "update.txt"
 
 # ===== APP SETTINGS =====
