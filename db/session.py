@@ -1,14 +1,22 @@
 from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from config import DB_FILE
+from config import DATABASE_URL
 
-db_path = Path(DB_FILE)
-db_path.parent.mkdir(parents=True, exist_ok=True)
+if DATABASE_URL.startswith("sqlite:///"):
+    db_file = DATABASE_URL.replace("sqlite:///", "")
+    db_path = Path(db_file)
 
-DATABASE_URL = f"sqlite:///{db_path}"
+    if db_path.parent != Path("."):
+        db_path.parent.mkdir(parents=True, exist_ok=True)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
