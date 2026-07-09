@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from pathlib import Path
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 from config import DATABASE_URL
 from db.models import Entry, UserSettings
@@ -39,6 +39,10 @@ def migrate():
                     currency=row["currency"] or "PLN",
                 )
             )
+        session.execute(text(
+        "SELECT setval(pg_get_serial_sequence('entries','id'), "
+        "COALESCE((SELECT MAX(id) FROM entries), 1))"
+    ))
         session.commit()
         print("Committed.")
     sqlite_conn.close()
