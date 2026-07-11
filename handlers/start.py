@@ -3,8 +3,8 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from keyboards.main_menu import build_main_menu
+from locales import detect_language, t
 from services.settings_service import SettingsService
-from locales import t, detect_language
 
 router = Router()
 
@@ -24,5 +24,5 @@ async def start_handler(message: Message):
 
     await message.answer(
         f"{t('start', lang)}\n\n{t('help_text', lang)}",
-        reply_markup=build_main_menu(lang)
+        reply_markup=build_main_menu(lang),
     )

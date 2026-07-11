@@ -14,7 +14,6 @@ TEXTS = {
     "category": "Category",
     "language": "Language",
     "currency": "Currency",
-    "category": "Category",
     "failed_save_expense": "❌ Failed to save expense.",
     "failed_save_income": "❌ Failed to save income.",
     "receipt_received": "📸 Receipt received. Parsing...",
@@ -61,20 +60,16 @@ TEXTS = {
         "• salary 3000\n"
         "• how much did I spend this week?\n"
         "• what is my top category this month?\n\n"
-
         "📊 Reports:\n"
         "• today — today's expenses\n"
         "• week — weekly expenses\n"
         "• month — monthly expenses\n"
         "• analytics — spending analytics\n"
         "• export — export your data\n\n"
-
         "✏️ Edit:\n"
         "• edit entries\n"
         "• delete entries\n\n"
-
         "📷 You can also send a receipt photo — the bot will try to parse it automatically.\n\n"
-
         "Feedback / updates / roadmap:\n"
         "https://t.me/grindbtco"
     ),
@@ -83,5 +78,4 @@ TEXTS = {
     "top_category_period": "Your top category this {period} is {category} ({total} {currency}).",
     "no_expenses_period": "No expenses found for this period.",
     "unknown_question": "I couldn't understand this finance question yet.",
-    
 }

@@ -33,7 +33,7 @@ class AnalyticsService:
     @staticmethod
     def get_last_expenses(chat_id, limit=5):
         return EntryRepository.get_last_expenses(str(chat_id), limit)
-    
+
     @staticmethod
     def get_expenses_for_period(chat_id, period):
         entries = EntryRepository.get_expenses_for_period(str(chat_id), period)
@@ -48,7 +48,7 @@ class AnalyticsService:
             }
             for entry in entries
         ]
-    
+
     @staticmethod
     def get_total_spending(chat_id, period):
         balance_data = AnalyticsService.get_balance_data(chat_id)
@@ -63,7 +63,7 @@ class AnalyticsService:
             return EntryRepository.get_expense_sum_for_period(str(chat_id), "week")
 
         return balance_data["expense_total"]
-    
+
     @staticmethod
     def get_category_spending(chat_id, category, period):
         return EntryRepository.get_category_spending_for_period(
@@ -72,11 +72,9 @@ class AnalyticsService:
             period,
         )
 
-
     @staticmethod
     def get_top_category(chat_id, period):
         return EntryRepository.get_top_category_for_period(str(chat_id), period)
-
 
     @staticmethod
     def get_biggest_expenses(chat_id, period, limit=5):
@@ -85,7 +83,6 @@ class AnalyticsService:
             period,
             limit,
         )
-
 
     @staticmethod
     def get_avarage_daily_spending(chat_id, period):

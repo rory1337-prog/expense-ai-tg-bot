@@ -14,7 +14,6 @@ TEXTS = {
     "category": "Kategoria",
     "language": "Język",
     "currency": "Waluta",
-    "category": "Kategoria",
     "failed_save_expense": "❌ Nie udało się zapisać wydatku.",
     "failed_save_income": "❌ Nie udało się zapisać dochodu.",
     "receipt_received": "📸 Paragon otrzymany. Odczytuję...",
@@ -61,20 +60,16 @@ TEXTS = {
         "• pensja 3000\n"
         "• ile wydałem w tym tygodniu?\n"
         "• jaka jest moja największa kategoria w tym miesiącu?\n\n"
-
         "📊 Raporty:\n"
         "• today — wydatki za dziś\n"
         "• week — wydatki tygodniowe\n"
         "• month — wydatki miesięczne\n"
         "• analytics — analiza wydatków\n"
         "• export — eksport danych\n\n"
-
         "✏️ Edycja:\n"
         "• edytowanie wpisów\n"
         "• usuwanie wpisów\n\n"
-
         "📷 Możesz też wysłać zdjęcie paragonu — bot spróbuje automatycznie go rozpoznać.\n\n"
-        
         "Aktualizacje / roadmapa / feedback:\n"
         "https://t.me/grindbtco"
     ),
@@ -83,5 +78,4 @@ TEXTS = {
     "top_category_period": "Twoja top kategoria za okres {period} to {category} ({total} {currency}).",
     "no_expenses_period": "Brak wydatków w tym okresie.",
     "unknown_question": "Nie rozumiem tego pytania.",
-    
 }

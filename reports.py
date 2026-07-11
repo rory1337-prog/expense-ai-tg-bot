@@ -3,11 +3,11 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from services.expense_service import ExpenseService
-from services.settings_service import SettingsService
-from services.analytics_service import AnalyticsService
 from locales import t
 from locales.categories import localize_category
+from services.analytics_service import AnalyticsService
+from services.expense_service import ExpenseService
+from services.settings_service import SettingsService
 
 
 def get_locale_data(chat_id):
@@ -27,13 +27,13 @@ def build_report(chat_id):
 
     total = sum(item["amount"] for item in expense_items)
 
-    report = f'{t("total", lang)}: {total:.2f} {currency}\n\n'
+    report = f"{t('total', lang)}: {total:.2f} {currency}\n\n"
 
     for i, item in enumerate(expense_items, start=1):
         report += (
-            f'{i}. {item["name"]} '
-            f'({item["amount"]:.2f} {currency}) '
-            f'[{localize_category(item["category"], lang)}]\n'
+            f"{i}. {item['name']} "
+            f"({item['amount']:.2f} {currency}) "
+            f"[{localize_category(item['category'], lang)}]\n"
         )
 
     return report
@@ -64,9 +64,9 @@ def build_period_report(chat_id, period):
 
     for i, item in enumerate(rows, start=1):
         text += (
-            f'{i}. {item["name"]} '
-            f'({item["amount"]:.2f} {currency}) '
-            f'[{localize_category(item["category"], lang)}]\n'
+            f"{i}. {item['name']} "
+            f"({item['amount']:.2f} {currency}) "
+            f"[{localize_category(item['category'], lang)}]\n"
         )
 
     return text
@@ -151,7 +151,9 @@ def export_data(chat_id):
     export_dir = Path("exports")
     export_dir.mkdir(exist_ok=True)
 
-    export_file = export_dir / f"expensesAI_export_{chat_id}_{timestamp}_{unique_id}.txt"
+    export_file = (
+        export_dir / f"expensesAI_export_{chat_id}_{timestamp}_{unique_id}.txt"
+    )
 
     income = sum(item["amount"] for item in entries if item["type"] == "income")
     expense = sum(item["amount"] for item in entries if item["type"] == "expense")
@@ -171,7 +173,9 @@ def export_data(chat_id):
         lines.append(f"   {t('type', lang)}: {item['type']}")
         lines.append(f"   {t('name', lang)}: {item['name']}")
         lines.append(f"   {t('amount', lang)}: {item['amount']:.2f} {currency}")
-        lines.append(f"   {t('category', lang)}: {localize_category(item['category'], lang)}")
+        lines.append(
+            f"   {t('category', lang)}: {localize_category(item['category'], lang)}"
+        )
         lines.append("")
 
     with open(export_file, "w", encoding="utf-8") as f:

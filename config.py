@@ -1,13 +1,11 @@
 # ===== IMPORTS =====
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # ===== ENVIRONMENT =====
-load_dotenv(
-    dotenv_path=Path(__file__).with_name(".env"),
-    override=False
-)
+load_dotenv(dotenv_path=Path(__file__).with_name(".env"), override=False)
 
 BOT_TOKEN = os.getenv("BOTTOKEN", "").strip()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()

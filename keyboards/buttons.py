@@ -4,25 +4,21 @@ BUTTONS = {
         "ru": "➕ Добавить расход",
         "pl": "➕ Dodaj wydatek",
     },
-
     "reports": {
         "en": "📊 Reports",
         "ru": "📊 Отчёты",
         "pl": "📊 Raporty",
     },
-
     "edit": {
         "en": "✏️ Edit",
         "ru": "✏️ Изменить",
         "pl": "✏️ Edytuj",
     },
-
     "settings": {
         "en": "⚙️ Settings",
         "ru": "⚙️ Настройки",
         "pl": "⚙️ Ustawienia",
     },
-
     "help": {
         "en": "ℹ️ Help",
         "ru": "ℹ️ Помощь",

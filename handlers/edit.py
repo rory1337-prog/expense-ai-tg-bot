@@ -1,11 +1,16 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.fsm.context import FSMContext
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
+from locales import t
 from services.expense_service import ExpenseService
 from services.settings_service import SettingsService
 from states.edit_states import EditEntry
-from locales import t
 
 router = Router()
 
@@ -20,15 +25,18 @@ async def edit_select_callback(callback: CallbackQuery):
     actions_menu = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=t("edit", lang), callback_data=f"edit_entry:{entry_id}"),
-                InlineKeyboardButton(text=t("delete", lang), callback_data=f"delete_entry:{entry_id}")
+                InlineKeyboardButton(
+                    text=t("edit", lang), callback_data=f"edit_entry:{entry_id}"
+                ),
+                InlineKeyboardButton(
+                    text=t("delete", lang), callback_data=f"delete_entry:{entry_id}"
+                ),
             ]
         ]
     )
 
     await callback.message.answer(
-        f"{t('edit_entry_question', lang)} #{entry_id}?",
-        reply_markup=actions_menu
+        f"{t('edit_entry_question', lang)} #{entry_id}?", reply_markup=actions_menu
     )
     await callback.answer()
 

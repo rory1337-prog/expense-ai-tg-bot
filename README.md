@@ -3,311 +3,91 @@
 ![CI](https://github.com/rory1337-prog/expense-ai-tg-bot/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.13%2B-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red)
-![Alembic](https://img.shields.io/badge/Alembic-enabled-orange)
-![Docker](https://img.shields.io/badge/Docker-enabled-2496ED)
-![Tests](https://img.shields.io/badge/tests-pytest-green)
-![License](https://img.shields.io/badge/license-MIT-success)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-Production-ready AI-powered personal finance assistant that automatically extracts expenses from receipt photos, tracks income and spending, and provides intelligent financial analytics through Telegram.
+AI-powered Telegram finance assistant: send a receipt photo — it extracts the expenses, tracks your income and spending, and answers questions about your money in plain language.
 
-Originally planned as a Make/n8n automation workflow, the project evolved into a fully custom Python backend with a layered architecture, PostgreSQL, SQLAlchemy, Alembic, Docker, and CI/CD.
+**Try it:** [@checkexpenses_ai_bot](https://t.me/checkexpenses_ai_bot)
 
----
+<!-- TODO: demo GIF — receipt photo → parsed expense -->
 
-# 🚀 Public Beta
+## Features
 
-Try the bot:
-
-https://t.me/checkexpenses_ai_bot
-
----
-
-# Features
-
-- AI receipt recognition using OpenAI Vision
-- Structured Outputs (JSON Schema validation)
-- Expense & income tracking
-- AI-powered financial assistant (`/ask`)
-- Daily / Weekly / Monthly reports
-- Spending analytics & balance tracking
-- Expense editing & deletion
-- CSV export
-- Multi-language support (EN / RU / PL)
-- PostgreSQL persistence
-- Docker deployment
-- Production VPS hosting
-
----
-
-# Architecture
-
-```
-  Telegram User
-        │
-        ▼
-    aiogram 3
-        │
-        ▼
- Telegram Handlers
-        │
-        ▼
- Business Services
-        │
-        ▼
-  Repository Layer
-        │
-        ▼
-  SQLAlchemy ORM
-        │
-        ▼
-   PostgreSQL
-```
-
-Receipt processing pipeline:
-
-```
-Receipt Photo
-      │
-      ▼
-OpenAI Vision
-      │
-      ▼
-Structured Outputs
- (JSON Schema)
-      │
-      ▼
-  Validation
-      │
-      ▼
-Expense Service
-      │
-      ▼
-  Repository
-      │
-      ▼
-  PostgreSQL
-      │
-      ▼
-Reports & Analytics
-```
-
----
-
-# Tech Stack
-
-## Backend
-
-- Python 3.13
-- aiogram 3.x
-- SQLAlchemy 2.0
-- PostgreSQL
-- Alembic
-- httpx
-
-## AI
-
-- OpenAI Vision
-- OpenAI Structured Outputs
-- JSON Schema validation
-
-## DevOps
-
-- Docker
-- GitHub Actions
-- Ubuntu VPS
-- Alembic migrations
-
-## Testing
-
-- pytest
-
----
-
-# Project Structure
-
-```
-expense-ai-tg-bot/
-
-├── handlers/
-├── services/
-├── repositories/
-├── db/
-│   ├── models.py
-│   ├── session.py
-│   └── database.py
-│
-├── ai/
-├── analytics/
-├── reports/
-├── locales/
-├── keyboards/
-├── states/
-├── tests/
-│
-├── bot.py
-├── Dockerfile
-├── docker-compose.yml
-├── alembic/
-└── README.md
-```
-
----
-
-# Key Engineering Features
-
-- Layered architecture
-- Repository pattern
-- SQLAlchemy ORM
-- Alembic database migrations
-- PostgreSQL production database
-- OpenAI Vision integration
-- Structured Outputs validation
-- Async HTTP client (httpx)
-- Dockerized deployment
-- GitHub Actions CI
-- Environment-based configuration
-- Modular aiogram architecture
-- Production-ready error handling
-
----
-
-# AI Query Examples
-
-Examples of natural language financial analysis:
+- 📸 Receipt recognition via OpenAI Vision (Structured Outputs / JSON Schema)
+- 💸 Expense & income tracking
+- 🤖 AI financial assistant — ask questions like:
 
 ```
 How much did I spend this month?
-
 What is my biggest spending category?
-
-Show my average daily expenses.
-
-How much did I spend on food this week?
-
-Какие у меня самые большие расходы?
-
 Сколько я потратил на транспорт?
-
-Ile wydałem na jedzenie w tym miesiącu?
+Ile wydałem na jedzenie?
 ```
 
----
+- 📊 Reports & spending analytics
+- 🌍 English / Русский / Polski
 
-# Receipt Processing
+## How it works
 
-The bot automatically:
-
-1. Receives a receipt photo
-2. Sends it to OpenAI Vision
-3. Extracts structured transaction data
-4. Validates JSON output
-5. Normalizes expense categories
-6. Stores the transaction in PostgreSQL
-7. Makes it immediately available for analytics
-
----
-
-# Testing
-
-Run the test suite:
-
-```bash
-pytest
+```
+Receipt photo → OpenAI Vision → structured JSON → validation → PostgreSQL
+/ask question → context from DB → LLM → answer
 ```
 
-Current tests include:
+Layered backend: aiogram handlers → services → repositories → SQLAlchemy 2.0 → PostgreSQL. Migrations via Alembic.
 
-- expense parsing
-- income parsing
-- category detection
-- decimal values
-- invalid input handling
-- parser validation
+## Tech Stack
 
----
+| Category | Technologies |
+|----------|--------------|
+| Backend  | Python 3.13, aiogram, SQLAlchemy 2.0 |
+| Database | PostgreSQL 16, Alembic |
+| AI       | OpenAI Vision, Structured Outputs |
+| DevOps   | Docker, GitHub Actions, Ubuntu VPS |
+| Quality  | Ruff, pytest, pre-commit |
 
-# Local Development
-
-Clone repository
+## Quick Start
 
 ```bash
 git clone https://github.com/rory1337-prog/expense-ai-tg-bot.git
 cd expense-ai-tg-bot
-```
-
-Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Configure environment
-
-```env
-BOT_TOKEN=...
-OPENAI_API_KEY=...
-DATABASE_URL=postgresql+psycopg://...
-```
-
-Run database migrations
-
-```bash
-alembic upgrade head
-```
-
-Start the bot
-
-```bash
-python bot.py
-```
-
-Or use Docker
-
-```bash
+cp .env.example .env   # fill in the variables below
 docker compose up --build
 ```
 
----
+| Variable | Description |
+|----------|-------------|
+| `BOT_TOKEN` | Telegram bot token from [@BotFather](https://t.me/BotFather) |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `DATABASE_URL` | PostgreSQL connection string |
 
-# Roadmap
+<details>
+<summary>Run without Docker</summary>
 
-### Completed
+Requires a running PostgreSQL instance.
 
-- AI receipt recognition
-- PostgreSQL migration
-- SQLAlchemy ORM
-- Alembic migrations
-- Repository pattern
-- Layered architecture
-- Docker deployment
-- GitHub Actions
-- Multi-language support
-- Financial analytics
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+alembic upgrade head
+python bot.py
+```
 
-### Planned
+</details>
 
-- Budget planning
-- Smart spending recommendations
-- Forecasting
-- REST API
-- Web dashboard
-- Mobile application
+## Development
 
----
+```bash
+ruff check .
+pytest
+```
 
-# Project Evolution
+## Roadmap
 
-ExpensesAI started as a simple idea:
+- [x] AI receipt OCR, PostgreSQL + SQLAlchemy, Alembic, Docker, CI
+- [ ] Budget planning & spending recommendations
+- [ ] REST API
+- [ ] Web dashboard
 
-> "Take a photo of a receipt, automatically save it to the database, and generate monthly expense analysis."
+## License
 
-The first implementation was planned as a Make/n8n automation workflow.
-
-As the project evolved, it became a fully custom Python backend with production-grade architecture, AI-powered receipt recognition, relational data modeling, automated database migrations, Docker deployment, and continuous integration.
-
----
-
-# License
-
-This project is licensed under the MIT License.
+[MIT](LICENSE)
