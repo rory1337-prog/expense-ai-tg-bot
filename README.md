@@ -7,7 +7,7 @@
 
 AI-powered Telegram finance assistant: send a receipt photo — it extracts the expenses, tracks your income and spending, and answers questions about your money in plain language.
 
-**Try it:** [@checkexpenses_ai_bot](https://t.me/checkexpenses_ai_bot)
+**Try it** [@checkexpenses_ai_bot](https://t.me/checkexpenses_ai_bot)
 
 ![Demo](assets/demo.gif)
 
@@ -78,6 +78,7 @@ python bot.py
 
 ```bash
 ruff check .
+black --check .
 pytest
 ```
 
