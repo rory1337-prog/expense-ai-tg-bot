@@ -1,222 +1,313 @@
-# ExpensesAI Telegram Bot
+# ExpensesAI
+
 ![CI](https://github.com/rory1337-prog/expense-ai-tg-bot/actions/workflows/ci.yml/badge.svg)
-![Python](https://img.shields.io/badge/Python-3.x-blue)
-![Docker](https://img.shields.io/badge/Docker-enabled-blue)
+![Python](https://img.shields.io/badge/Python-3.13%2B-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red)
+![Alembic](https://img.shields.io/badge/Alembic-enabled-orange)
+![Docker](https://img.shields.io/badge/Docker-enabled-2496ED)
 ![Tests](https://img.shields.io/badge/tests-pytest-green)
-![Status](https://img.shields.io/badge/status-MVP-success)
+![License](https://img.shields.io/badge/license-MIT-success)
 
-AI-powered Telegram bot for personal finance tracking with OpenAI receipt parsing, analytics, reporting, and export functionality.
+Production-ready AI-powered personal finance assistant that automatically extracts expenses from receipt photos, tracks income and spending, and provides intelligent financial analytics through Telegram.
 
-Built with Python, aiogram, OpenAI API, SQLite, and Docker.
+Originally planned as a Make/n8n automation workflow, the project evolved into a fully custom Python backend with a layered architecture, PostgreSQL, SQLAlchemy, Alembic, Docker, and CI/CD.
 
-## 🚀 Public Beta
+---
+
+# 🚀 Public Beta
 
 Try the bot:
+
 https://t.me/checkexpenses_ai_bot
 
-## Features
+---
 
-- AI receipt parsing using OpenAI Vision
-- Conversational AI finance analytics (/ask)
+# Features
+
+- AI receipt recognition using OpenAI Vision
+- Structured Outputs (JSON Schema validation)
 - Expense & income tracking
+- AI-powered financial assistant (`/ask`)
+- Daily / Weekly / Monthly reports
+- Spending analytics & balance tracking
+- Expense editing & deletion
+- CSV export
 - Multi-language support (EN / RU / PL)
-- Daily / weekly / monthly reports
-- Analytics & balance tracking
-- Edit / delete expense entries
-- Export expense history
-- Dockerized deployment
-- Persistent SQLite storage
-- VPS production hosting
+- PostgreSQL persistence
+- Docker deployment
+- Production VPS hosting
 
-## Production Features
+---
 
-- Async OpenAI integration using httpx
-- Structured JSON schema validation
-- Modular aiogram architecture
-- Persistent SQLite database
-- Unit-tested parser logic (pytest)
-- Unique export file generation
-- Environment-based configuration
-- Docker restart policies for uptime
+# Architecture
 
-## Tech Stack
+```
+  Telegram User
+        │
+        ▼
+    aiogram 3
+        │
+        ▼
+ Telegram Handlers
+        │
+        ▼
+ Business Services
+        │
+        ▼
+  Repository Layer
+        │
+        ▼
+  SQLAlchemy ORM
+        │
+        ▼
+   PostgreSQL
+```
 
-### Backend
+Receipt processing pipeline:
 
-- Python 3
+```
+Receipt Photo
+      │
+      ▼
+OpenAI Vision
+      │
+      ▼
+Structured Outputs
+ (JSON Schema)
+      │
+      ▼
+  Validation
+      │
+      ▼
+Expense Service
+      │
+      ▼
+  Repository
+      │
+      ▼
+  PostgreSQL
+      │
+      ▼
+Reports & Analytics
+```
+
+---
+
+# Tech Stack
+
+## Backend
+
+- Python 3.13
 - aiogram 3.x
-- SQLite
-- OpenAI API
+- SQLAlchemy 2.0
+- PostgreSQL
+- Alembic
 - httpx
 
-### DevOps
+## AI
+
+- OpenAI Vision
+- OpenAI Structured Outputs
+- JSON Schema validation
+
+## DevOps
 
 - Docker
+- GitHub Actions
 - Ubuntu VPS
-- GitHub
-- dotenv
-
-### Testing
-
-- pytest
-
-## Architecture
-
-```text
-Telegram User
-    ↓
-bot.py
-    ↓
-handlers/
-    ↓
-parser.py        → text parsing
-ai.py            → OpenAI receipt parsing
-reports.py       → reports & analytics
-database.py      → SQLite operations
-    ↓
-SQLite
-```
-
-## Project Structure
-
-```text
-expense-ai-tg-bot/
-├── handlers/           # Aiogram routers
-├── keyboards/          # Telegram keyboards
-├── locales/            # Multi-language texts
-├── states/             # FSM states
-├── tests/              # Unit tests
-├── ai.py               # OpenAI receipt parsing
-├── parser.py           # Expense/income parsing
-├── reports.py          # Reports & analytics
-├── database.py         # SQLite operations
-├── config.py           # Environment config
-├── bot.py              # Bot entrypoint
-├── Dockerfile
-├── requirements.txt
-└── README.md
-```
-
-## Demo
-
-Demo GIF / screenshots coming soon.
-
-## Example Usage
-
-```text
-coffee 15
-uber 30
-/income salary 3000
-/report
-/today
-/week
-/month
-/balance
-/analytics
-/export
-```
-
-## AI Query Examples
-
-Users can ask natural language finance questions:
-
-- "How much did I spend this month?"
-- "What is my top category this week?"
-- "How much did I spend on food this month?"
-- "What are my biggest expenses this month?"
-- "What is my average daily spending this month?"
-- "Сколько я потратил на транспорт за неделю?"
-- "Какие у меня самые большие расходы?"
-- "Ile wydałem na groceries w tym miesiącu?"
-- "Jakie są moje średnie wydatki?"
-
-## Receipt Parsing
-
-1. User sends receipt photo
-2. Bot downloads image
-3. Image is sent to OpenAI Vision API
-4. Structured expense data is extracted
-5. Category is normalized locally
-6. Data is stored in SQLite
-
-Supported extraction:
-
-* expense name
-* amount
-* category
+- Alembic migrations
 
 ## Testing
 
-Run unit tests:
+- pytest
+
+---
+
+# Project Structure
+
+```
+expense-ai-tg-bot/
+
+├── handlers/
+├── services/
+├── repositories/
+├── db/
+│   ├── models.py
+│   ├── session.py
+│   └── database.py
+│
+├── ai/
+├── analytics/
+├── reports/
+├── locales/
+├── keyboards/
+├── states/
+├── tests/
+│
+├── bot.py
+├── Dockerfile
+├── docker-compose.yml
+├── alembic/
+└── README.md
+```
+
+---
+
+# Key Engineering Features
+
+- Layered architecture
+- Repository pattern
+- SQLAlchemy ORM
+- Alembic database migrations
+- PostgreSQL production database
+- OpenAI Vision integration
+- Structured Outputs validation
+- Async HTTP client (httpx)
+- Dockerized deployment
+- GitHub Actions CI
+- Environment-based configuration
+- Modular aiogram architecture
+- Production-ready error handling
+
+---
+
+# AI Query Examples
+
+Examples of natural language financial analysis:
+
+```
+How much did I spend this month?
+
+What is my biggest spending category?
+
+Show my average daily expenses.
+
+How much did I spend on food this week?
+
+Какие у меня самые большие расходы?
+
+Сколько я потратил на транспорт?
+
+Ile wydałem na jedzenie w tym miesiącu?
+```
+
+---
+
+# Receipt Processing
+
+The bot automatically:
+
+1. Receives a receipt photo
+2. Sends it to OpenAI Vision
+3. Extracts structured transaction data
+4. Validates JSON output
+5. Normalizes expense categories
+6. Stores the transaction in PostgreSQL
+7. Makes it immediately available for analytics
+
+---
+
+# Testing
+
+Run the test suite:
 
 ```bash
 pytest
 ```
 
-Current test coverage:
+Current tests include:
 
-- category detection
 - expense parsing
 - income parsing
+- category detection
 - decimal values
 - invalid input handling
+- parser validation
 
-## Deployment
+---
 
-Production deployment includes:
+# Local Development
 
-- Docker containerization
-- Automatic container restart
-- `.env`-based secret management
-- Persistent SQLite storage
-- VPS hosting (Ubuntu)
-
-Run locally:
+Clone repository
 
 ```bash
 git clone https://github.com/rory1337-prog/expense-ai-tg-bot.git
 cd expense-ai-tg-bot
-pip install -r requirements.txt
-python3 bot.py
 ```
 
-Create `.env`:
+Install dependencies
 
 ```bash
-BOTTOKEN=your_telegram_bot_token
-OPENAI_API_KEY=your_openai_api_key
+pip install -r requirements.txt
 ```
 
-## Roadmap
+Configure environment
 
-- Conversational AI insights expansion
+```env
+BOT_TOKEN=...
+OPENAI_API_KEY=...
+DATABASE_URL=postgresql+psycopg://...
+```
+
+Run database migrations
+
+```bash
+alembic upgrade head
+```
+
+Start the bot
+
+```bash
+python bot.py
+```
+
+Or use Docker
+
+```bash
+docker compose up --build
+```
+
+---
+
+# Roadmap
+
+### Completed
+
+- AI receipt recognition
 - PostgreSQL migration
-- Budget limits & notifications
-- Webhook support
-- OCR fallback system
-- Advanced analytics dashboard
-- CI/CD pipeline
-- Web/mobile frontend
+- SQLAlchemy ORM
+- Alembic migrations
+- Repository pattern
+- Layered architecture
+- Docker deployment
+- GitHub Actions
+- Multi-language support
+- Financial analytics
 
-## Current MVP limitations
+### Planned
 
-- The current MVP uses SQLite for persistent storage.
-- SQLite is acceptable for a small Telegram bot MVP, but it may become a bottleneck with many concurrent users.
-- Future production scaling should include migration to PostgreSQL.
-- Export files are generated with unique filenames to avoid collisions during concurrent export requests.
+- Budget planning
+- Smart spending recommendations
+- Forecasting
+- REST API
+- Web dashboard
+- Mobile application
 
-## Status
+---
 
-Production MVP deployed on VPS with Docker and active development ongoing.
+# Project Evolution
 
-Current focus:
+ExpensesAI started as a simple idea:
 
-- conversational AI analytics
-- UX improvements
-- PostgreSQL migration
-- testing & reliability
-- infrastructure scalability
+> "Take a photo of a receipt, automatically save it to the database, and generate monthly expense analysis."
 
-## License
+The first implementation was planned as a Make/n8n automation workflow.
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+As the project evolved, it became a fully custom Python backend with production-grade architecture, AI-powered receipt recognition, relational data modeling, automated database migrations, Docker deployment, and continuous integration.
+
+---
+
+# License
+
+This project is licensed under the MIT License.
