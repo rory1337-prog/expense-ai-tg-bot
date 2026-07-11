@@ -1,5 +1,5 @@
 from sqlalchemy import select, func, case
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from db.models import Entry
 from db.session import SessionLocal
 
@@ -116,57 +116,78 @@ class EntryRepository:
             return session.execute(stmt).all()
         
     @staticmethod
-    def get_expenses_for_period(chat_id: str, period: str):
-        with SessionLocal() as session:
-            stmt = select(Entry).where(
-                Entry.chat_id == str(chat_id),
-                Entry.type == "expense",
-            )
+    def _get_period_bounds(period: str):
+        now = datetime.now()
+        today = now.date()
 
-            if period == "today":
-                stmt = stmt.where(
-                    func.date(Entry.created_at) == func.date("now", "localtime")
+        if period == "today":
+            start = datetime.combine(today, time.min)
+            end = start + timedelta(days=1)
+
+        elif period == "week":
+            start = datetime.combine(today - timedelta(days=6), time.min)
+            end = datetime.combine(today + timedelta(days=1), time.min)
+
+        elif period == "month":
+            start = datetime.combine(today.replace(day=1), time.min)
+
+            if today.month == 12:
+                next_month = today.replace(
+                    year=today.year + 1,
+                    month=1,
+                    day=1,
                 )
-
-            elif period == "week":
-                stmt = stmt.where(
-                    func.date(Entry.created_at) >= func.date("now", "localtime", "-6 days"),
-                    func.date(Entry.created_at) <= func.date("now", "localtime"),
-                )
-
-            elif period == "month":
-                stmt = stmt.where(
-                    func.strftime("%Y-%m", Entry.created_at)
-                    == func.strftime("%Y-%m", "now", "localtime")
-                )
-
             else:
-                return []
+                next_month = today.replace(
+                    month=today.month + 1,
+                    day=1,
+                )
 
-            stmt = stmt.order_by(Entry.id.desc())
+            end = datetime.combine(next_month, time.min)
+
+        else:
+            return None
+
+        return start, end
+
+    @staticmethod
+    def get_expenses_for_period(chat_id: str, period: str):
+        bounds = EntryRepository._get_period_bounds(period)
+
+        if bounds is None:
+            return []
+
+        start, end = bounds
+
+        with SessionLocal() as session:
+            stmt = (
+                select(Entry)
+                .where(
+                    Entry.chat_id == str(chat_id),
+                    Entry.type == "expense",
+                    Entry.created_at >= start,
+                    Entry.created_at < end,
+                )
+                .order_by(Entry.id.desc())
+            )
 
             return session.execute(stmt).scalars().all()
 
     @staticmethod
     def get_expense_sum_for_period(chat_id: str, period: str):
+        bounds = EntryRepository._get_period_bounds(period)
+
+        if bounds is None:
+            return 0
+
+        start, end = bounds
+
         with SessionLocal() as session:
             stmt = select(func.sum(Entry.amount)).where(
                 Entry.chat_id == str(chat_id),
                 Entry.type == "expense",
+                Entry.created_at >= start,
+                Entry.created_at < end,
             )
-
-            if period == "today":
-                stmt = stmt.where(func.date(Entry.created_at) == func.date("now", "localtime"))
-            elif period == "week":
-                stmt = stmt.where(
-                    func.date(Entry.created_at) >= func.date("now", "localtime", "-6 days"),
-                    func.date(Entry.created_at) <= func.date("now", "localtime"),
-                )
-            elif period == "month":
-                stmt = stmt.where(
-                    func.strftime("%Y-%m", Entry.created_at) == func.strftime("%Y-%m", "now", "localtime")
-                )
-            else:
-                return 0
 
             return session.execute(stmt).scalar() or 0
