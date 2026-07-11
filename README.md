@@ -9,7 +9,7 @@ AI-powered Telegram finance assistant: send a receipt photo — it extracts the 
 
 **Try it:** [@checkexpenses_ai_bot](https://t.me/checkexpenses_ai_bot)
 
-<!-- TODO: demo GIF — receipt photo → parsed expense -->
+![Demo](assets/demo.gif)
 
 ## Features
 
