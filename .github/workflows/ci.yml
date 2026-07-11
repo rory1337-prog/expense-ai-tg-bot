@@ -2,13 +2,18 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    env:
+      BOTTOKEN: test_token
+      OPENAI_API_KEY: test_key
+      DATABASE_URL: sqlite:///./alembic_test.db
 
     steps:
       - name: Checkout code
@@ -17,21 +22,28 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
+          cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Black
+        run: black --check .
 
       - name: Compile Python files
-        env:
-          BOTTOKEN: test_token
-          OPENAI_API_KEY: test_key
-        run: python -m compileall .
+        run: |
+          python -m compileall \
+            -x '(^|/)(\.git|\.mypy_cache|\.pytest_cache|\.ruff_cache|\.venv|venv)/' \
+            .
 
       - name: Run tests
-        env:
-          BOTTOKEN: test_token
-          OPENAI_API_KEY: test_key
         run: PYTHONPATH=. pytest
 
       - name: Build Docker image

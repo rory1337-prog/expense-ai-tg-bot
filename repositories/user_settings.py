@@ -1,6 +1,8 @@
 from sqlalchemy import select
+
 from db.models import UserSettings
 from db.session import SessionLocal
+
 
 class UserSettingsRepository:
     @staticmethod
@@ -8,7 +10,7 @@ class UserSettingsRepository:
         with SessionLocal() as session:
             stmt = select(UserSettings).where(UserSettings.chat_id == str(chat_id))
             return session.execute(stmt).scalar_one_or_none()
-        
+
     @staticmethod
     def create(chat_id: str, language: str = "en", currency: str = "PLN"):
         with SessionLocal() as session:
@@ -21,7 +23,7 @@ class UserSettingsRepository:
             session.commit()
             session.refresh(settings)
             return settings
-        
+
     @staticmethod
     def update(settings: UserSettings):
         with SessionLocal() as session:

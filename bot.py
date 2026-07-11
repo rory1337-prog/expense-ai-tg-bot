@@ -5,18 +5,18 @@ import os
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
-from handlers.start import router as start_router
-from handlers.menu import router as menu_router
-from handlers.reports import router as reports_router
-from handlers.edit import router as edit_router
-from handlers.photos import router as photos_router
-from handlers.settings import router as settings_router
 from handlers.ask import router as ask_router
+from handlers.edit import router as edit_router
 from handlers.expenses import router as expenses_router
+from handlers.menu import router as menu_router
+from handlers.photos import router as photos_router
+from handlers.reports import router as reports_router
+from handlers.settings import router as settings_router
+from handlers.start import router as start_router
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv('BOTTOKEN')
+BOT_TOKEN = os.getenv("BOTTOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -30,9 +30,11 @@ dp.include_router(settings_router)
 dp.include_router(ask_router)
 dp.include_router(expenses_router)
 
+
 async def main():
-    print('Bot started...')
+    print("Bot started...")
     await dp.start_polling(bot)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())

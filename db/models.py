@@ -1,7 +1,10 @@
 from datetime import datetime
-from sqlalchemy import String, Float, Integer, DateTime
+
+from sqlalchemy import DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from db.session import Base
+
 
 class Entry(Base):
     __tablename__ = "entries"
@@ -13,9 +16,7 @@ class Entry(Base):
     category: Mapped[str] = mapped_column(String, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str] = mapped_column(
-        DateTime,
-        default=datetime.now,
-        nullable=False
+        DateTime, default=datetime.now, nullable=False
     )
 
 

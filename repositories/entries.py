@@ -1,7 +1,10 @@
-from sqlalchemy import select, func, case
 from datetime import datetime, time, timedelta
+
+from sqlalchemy import case, func, select
+
 from db.models import Entry
 from db.session import SessionLocal
+
 
 class EntryRepository:
     @staticmethod
@@ -13,7 +16,7 @@ class EntryRepository:
                 .order_by(Entry.id.desc())
             )
             return session.execute(stmt).scalars().all()
-        
+
     @staticmethod
     def get_by_id(chat_id: str, entry_id: int):
         with SessionLocal() as session:
@@ -22,7 +25,7 @@ class EntryRepository:
                 Entry.id == entry_id,
             )
             return session.execute(stmt).scalar_one_or_none()
-        
+
     @staticmethod
     def save(entry: Entry):
         with SessionLocal() as session:
@@ -31,7 +34,7 @@ class EntryRepository:
             session.refresh(entry)
 
             return entry
-        
+
     @staticmethod
     def delete(entry: Entry):
         with SessionLocal() as session:
@@ -46,7 +49,7 @@ class EntryRepository:
             session.commit()
             session.refresh(managed)
             return managed
-        
+
     @staticmethod
     def get_balance_data(chat_id: str):
         with SessionLocal() as session:
@@ -72,7 +75,7 @@ class EntryRepository:
             )
 
             return session.execute(stmt).scalar() or 0
-        
+
     @staticmethod
     def get_expense_sum_by_date(chat_id: str, date_value: str):
         with SessionLocal() as session:
@@ -83,7 +86,7 @@ class EntryRepository:
             )
 
             return session.execute(stmt).scalar() or 0
-        
+
     @staticmethod
     def get_top_categories(chat_id: str, limit: int = 3):
         with SessionLocal() as session:
@@ -99,7 +102,7 @@ class EntryRepository:
             )
 
             return session.execute(stmt).all()
-        
+
     @staticmethod
     def get_last_expenses(chat_id: str, limit: int = 5):
         with SessionLocal() as session:
@@ -114,7 +117,7 @@ class EntryRepository:
             )
 
             return session.execute(stmt).all()
-        
+
     @staticmethod
     def _get_period_bounds(period: str):
         now = datetime.now()

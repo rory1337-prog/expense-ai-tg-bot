@@ -1,20 +1,22 @@
 # ===== IMPORTS =====
-import logging
-import json
 import base64
-import httpx
+import json
+import logging
 from datetime import datetime
+
+import httpx
 
 from config import OPENAI_API_KEY
 from parser import detect_category
 
 logger = logging.getLogger(__name__)
+
+
 # ===== AI RECEIPT PARSING =====
 async def ai_parse_photo(image_path):
     if not OPENAI_API_KEY:
         logger.warning("OPENAI_API_KEY not found")
         return None
-    
 
     with open(image_path, "rb") as f:
         image_bytes = f.read()
@@ -84,7 +86,7 @@ async def ai_parse_photo(image_path):
                                 "bills",
                                 "services",
                                 "education",
-                                "other"
+                                "other",
                             ],
                         },
                         "items": {
@@ -94,11 +96,11 @@ async def ai_parse_photo(image_path):
                                 "additionalProperties": False,
                                 "properties": {
                                     "name": {"type": "string"},
-                                    "amount": {"type": "number"}
+                                    "amount": {"type": "number"},
                                 },
-                                "required": ["name", "amount"]
-                            }
-                        }
+                                "required": ["name", "amount"],
+                            },
+                        },
                     },
                     "required": ["name", "amount", "category", "items"],
                 },
@@ -109,9 +111,7 @@ async def ai_parse_photo(image_path):
 
     async with httpx.AsyncClient(timeout=30) as client:
         response = await client.post(
-            "https://api.openai.com/v1/responses",
-            headers=headers,
-            json=payload
+            "https://api.openai.com/v1/responses", headers=headers, json=payload
         )
 
     if response.status_code != 200:
@@ -145,7 +145,7 @@ async def ai_parse_photo(image_path):
         if expense["amount"] <= 0:
             logger.warning("Invalid receipt total")
             return None
-        
+
         expense["category"] = str(expense["category"]).strip().lower()
         expense["items"] = expense.get("items", [])
 
@@ -159,16 +159,13 @@ async def ai_parse_photo(image_path):
             "bills",
             "services",
             "education",
-            "other"
+            "other",
         }
-        if (
-            expense["category"] not in allowed
-            or expense["category"] == "other"
-        ):
-            expense["category"] = detect_category(expense['name'])
-        
-        expense['type'] = 'expense'
-        expense['created_at'] = datetime.now().replace(microsecond=0).isoformat()
+        if expense["category"] not in allowed or expense["category"] == "other":
+            expense["category"] = detect_category(expense["name"])
+
+        expense["type"] = "expense"
+        expense["created_at"] = datetime.now().replace(microsecond=0).isoformat()
 
         return expense
 
@@ -356,7 +353,6 @@ def classify_message(text):
         "largest purchases",
         "average daily spending",
         "average spending",
-
         "сколько",
         "потратил",
         "потратила",
@@ -377,8 +373,7 @@ def classify_message(text):
         "крупные расходы",
         "самые дорогие покупки",
         "средние траты",
-        "средний расход",   
-
+        "средний расход",
         "ile",
         "wydałem",
         "wydałam",
@@ -395,7 +390,6 @@ def classify_message(text):
         "największe wydatki",
         "najdroższe zakupy",
         "średnie wydatki",
-
     ]
 
     if text.endswith("?"):
@@ -407,11 +401,12 @@ def classify_message(text):
 
     return "transaction"
 
+
 async def ai_classify_message(text):
 
     if not OPENAI_API_KEY:
         return "transaction"
-    
+
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json",
@@ -434,9 +429,9 @@ async def ai_classify_message(text):
                             "The message may be in English, Russian, Polish, or mixed language.\n"
                             "Return only structured JSON.\n\n"
                             f"Message: {text}"
-                        )
+                        ),
                     }
-                ]
+                ],
             }
         ],
         "text": {
@@ -448,43 +443,34 @@ async def ai_classify_message(text):
                     "properties": {
                         "type": {
                             "type": "string",
-                            "enum": [
-                                "expense",
-                                "income",
-                                "question",
-                                "unknown"
-                            ]
+                            "enum": ["expense", "income", "question", "unknown"],
                         }
                     },
                     "required": ["type"],
-                    "additionalProperties": False
+                    "additionalProperties": False,
                 },
-                "strict": True
+                "strict": True,
             }
-        }
+        },
     }
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             response = await client.post(
-                "https://api.openai.com/v1/responses",
-                headers=headers,
-                json=payload
+                "https://api.openai.com/v1/responses", headers=headers, json=payload
             )
 
         if response.status_code != 200:
             return "unknown"
-        
+
         data = response.json()
 
-        output_text = (
-            data["output"][0]["content"][0]["text"]
-        )
+        output_text = data["output"][0]["content"][0]["text"]
 
         result = json.loads(output_text)
 
         return result["type"]
-    
+
     except Exception:
         logger.exception("AI message classification failed")
         return "unknown"
