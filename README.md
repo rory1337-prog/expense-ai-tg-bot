@@ -5,7 +5,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-AI-powered Telegram finance assistant: send a receipt photo — it extracts the expenses, tracks your income and spending, and answers questions about your money in plain language.
+AI-powered Telegram finance assistant: send a receipt photo, track expenses and income, generate reports, and ask questions about your finances in natural language.
 
 **Try it** [@checkexpenses_ai_bot](https://t.me/checkexpenses_ai_bot)
 
@@ -13,28 +13,22 @@ AI-powered Telegram finance assistant: send a receipt photo — it extracts the 
 
 ## Features
 
-- 📸 Receipt recognition via OpenAI Vision (Structured Outputs / JSON Schema)
-- 💸 Expense & income tracking
-- 🤖 AI financial assistant — ask questions like:
-
-```
-How much did I spend this month?
-What is my biggest spending category?
-Сколько я потратил на транспорт?
-Ile wydałem na jedzenie?
-```
-
-- 📊 Reports & spending analytics
-- 🌍 English / Русский / Polski
+* 📸 Receipt recognition via OpenAI Vision and Structured Outputs
+* 💸 Expense and income tracking
+* 💰 Balance, edit/delete, and CSV export
+* 📊 Daily, weekly, and monthly reports
+* 🤖 `/ask` analytics: total spending, daily average, category spending, top category, and biggest expenses
+* 🌍 English / Русский / Polski
+* 💱 Currency settings and timezone-aware reporting
 
 ## How it works
 
 ```
-Receipt photo → OpenAI Vision → structured JSON → validation → PostgreSQL
-/ask question → context from DB → LLM → answer
+Telegram → handlers → services → repositories → SQLAlchemy → PostgreSQL
+Receipt → OpenAI Vision → structured JSON → validation → database
 ```
 
-Layered backend: aiogram handlers → services → repositories → SQLAlchemy 2.0 → PostgreSQL. Migrations via Alembic.
+Database migrations are managed with Alembic. Dates are stored in UTC and reporting periods are calculated in the configured application timezone.
 
 ## Tech Stack
 
@@ -44,50 +38,44 @@ Layered backend: aiogram handlers → services → repositories → SQLAlchemy 2
 | Database | PostgreSQL 16, Alembic |
 | AI       | OpenAI Vision, Structured Outputs |
 | DevOps   | Docker, GitHub Actions, Ubuntu VPS |
-| Quality  | Ruff, pytest, pre-commit |
+| Quality  | Ruff, Black, mypy, pytest, pre-commit |
 
 ## Quick Start
 
 ```bash
 git clone https://github.com/rory1337-prog/expense-ai-tg-bot.git
 cd expense-ai-tg-bot
-cp .env.example .env   # fill in the variables below
+cp .env.example .env
 docker compose up --build
 ```
 
 | Variable | Description |
 |----------|-------------|
-| `BOT_TOKEN` | Telegram bot token from [@BotFather](https://t.me/BotFather) |
+| `BOTTOKEN` | Telegram bot token |
 | `OPENAI_API_KEY` | OpenAI API key |
-| `DATABASE_URL` | PostgreSQL connection string |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `APP_TIMEZONE` | Reporting timezone, for example Europe/Warsaw |
 
-<details>
-<summary>Run without Docker</summary>
-
-Requires a running PostgreSQL instance.
-
-```bash
-pip install -r requirements.txt -r requirements-dev.txt
-alembic upgrade head
-python bot.py
-```
-
-</details>
+Docker Compose generates `DATABASE_URL` automatically. When running without Docker, provide it manually and run `alembic upgrade head` before `python bot.py`.
 
 ## Development
 
 ```bash
 ruff check .
 black --check .
-pytest
+mypy config.py db repositories services
+pytest -q
 ```
+
+CI runs the checks against PostgreSQL 16, applies Alembic migrations, runs the test suite, and builds the Docker image.
 
 ## Roadmap
 
-- [x] AI receipt OCR, PostgreSQL + SQLAlchemy, Alembic, Docker, CI
-- [ ] Budget planning & spending recommendations
-- [ ] REST API
-- [ ] Web dashboard
+* [x] AI receipt parsing, financial analytics, PostgreSQL, Docker, CI
+* [ ] Budgets and threshold alerts
+* [ ] Monthly comparisons and Telegram charts
+* [ ] Scheduled reports
+* [ ] REST API and web dashboard
 
 ## License
 
