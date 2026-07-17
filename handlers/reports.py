@@ -16,6 +16,13 @@ from services.settings_service import SettingsService
 router = Router()
 
 
+def get_callback_message(callback: CallbackQuery) -> Message | None:
+    if isinstance(callback.message, Message):
+        return callback.message
+
+    return None
+
+
 @router.message(
     lambda message: (
         message.text
@@ -38,59 +45,101 @@ async def reports_handler(message: Message):
 
 @router.callback_query(lambda c: c.data == "today")
 async def today_callback(callback: CallbackQuery):
-    report = build_period_report(callback.message.chat.id, "today")
-    await callback.message.answer(report)
+    message = get_callback_message(callback)
+
+    if message is None:
+        await callback.answer()
+        return
+
+    report = build_period_report(message.chat.id, "today")
+    await message.answer(report)
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "week")
 async def week_callback(callback: CallbackQuery):
-    report = build_period_report(callback.message.chat.id, "week")
-    await callback.message.answer(report)
+    message = get_callback_message(callback)
+
+    if message is None:
+        await callback.answer()
+        return
+
+    report = build_period_report(message.chat.id, "week")
+    await message.answer(report)
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "month")
 async def month_callback(callback: CallbackQuery):
-    report = build_period_report(callback.message.chat.id, "month")
-    await callback.message.answer(report)
+    message = get_callback_message(callback)
+
+    if message is None:
+        await callback.answer()
+        return
+
+    report = build_period_report(message.chat.id, "month")
+    await message.answer(report)
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "all")
 async def all_callback(callback: CallbackQuery):
-    report = build_report(callback.message.chat.id)
-    await callback.message.answer(report)
+    message = get_callback_message(callback)
+
+    if message is None:
+        await callback.answer()
+        return
+
+    report = build_report(message.chat.id)
+    await message.answer(report)
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "balance")
 async def balance_callback(callback: CallbackQuery):
-    report = build_balance(callback.message.chat.id)
-    await callback.message.answer(report)
+    message = get_callback_message(callback)
+
+    if message is None:
+        await callback.answer()
+        return
+
+    report = build_balance(message.chat.id)
+    await message.answer(report)
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "analytics")
 async def analytics_callback(callback: CallbackQuery):
-    report = build_analytics(callback.message.chat.id)
-    await callback.message.answer(report)
+    message = get_callback_message(callback)
+
+    if message is None:
+        await callback.answer()
+        return
+
+    report = build_analytics(message.chat.id)
+    await message.answer(report)
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "export")
 async def export_callback(callback: CallbackQuery):
-    export_file = export_data(callback.message.chat.id)
+    message = get_callback_message(callback)
 
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    if message is None:
+        await callback.answer()
+        return
+
+    export_file = export_data(message.chat.id)
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
     if not export_file:
-        await callback.message.answer(t("no_data_export", lang))
+        await message.answer(t("no_data_export", lang))
         await callback.answer()
         return
 
     document = FSInputFile(export_file)
 
-    await callback.message.answer_document(document)
+    await message.answer_document(document)
     await callback.answer()

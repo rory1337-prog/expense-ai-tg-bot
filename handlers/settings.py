@@ -38,58 +38,86 @@ async def settings_handler(message: Message):
 
 @router.callback_query(lambda c: c.data == "settings_language")
 async def settings_language_callback(callback: CallbackQuery):
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    if not isinstance(callback.message, Message):
+        await callback.answer()
+        return
+
+    message = callback.message
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
-    await callback.message.answer(
-        t("choose_language", lang), reply_markup=build_language_menu()
+    await message.answer(
+        t("choose_language", lang),
+        reply_markup=build_language_menu(),
     )
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "settings_currency")
 async def settings_currency_callback(callback: CallbackQuery):
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    if not isinstance(callback.message, Message):
+        await callback.answer()
+        return
+
+    message = callback.message
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
-    await callback.message.answer(
-        t("choose_currency", lang), reply_markup=build_currency_menu()
+    await message.answer(
+        t("choose_currency", lang),
+        reply_markup=build_currency_menu(),
     )
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("set_lang:"))
+@router.callback_query(lambda c: c.data and c.data.startswith("set_lang:"))
 async def set_language_callback(callback: CallbackQuery):
-    language = callback.data.split(":")[1]
+    if not isinstance(callback.message, Message) or callback.data is None:
+        await callback.answer()
+        return
 
-    SettingsService.set_user_language(callback.message.chat.id, language)
+    message = callback.message
+    language = callback.data.split(":", maxsplit=1)[1]
 
-    await callback.message.answer(
+    SettingsService.set_user_language(message.chat.id, language)
+
+    await message.answer(
         f"{t('language_set', language)} {language}",
         reply_markup=build_main_menu(language),
     )
-
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("set_currency:"))
+@router.callback_query(lambda c: c.data and c.data.startswith("set_currency:"))
 async def set_currency_callback(callback: CallbackQuery):
-    currency = callback.data.split(":")[1]
+    if not isinstance(callback.message, Message) or callback.data is None:
+        await callback.answer()
+        return
 
-    SettingsService.set_user_currency(callback.message.chat.id, currency)
+    message = callback.message
+    currency = callback.data.split(":", maxsplit=1)[1]
 
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    SettingsService.set_user_currency(message.chat.id, currency)
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
-    await callback.message.answer(f"{t('currency_set', lang)} {currency}")
-
+    await message.answer(f"{t('currency_set', lang)} {currency}")
     await callback.answer()
 
 
 @router.callback_query(lambda c: c.data == "settings_help")
 async def settings_help_callback(callback: CallbackQuery):
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    if not isinstance(callback.message, Message):
+        await callback.answer()
+        return
+
+    message = callback.message
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
-    await callback.message.answer(t("help_text", lang))
+    await message.answer(t("help_text", lang))
     await callback.answer()

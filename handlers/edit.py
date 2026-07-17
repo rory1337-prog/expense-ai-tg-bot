@@ -15,62 +15,92 @@ from states.edit_states import EditEntry
 router = Router()
 
 
-@router.callback_query(lambda c: c.data.startswith("edit_select:"))
+@router.callback_query(lambda c: c.data and c.data.startswith("edit_select:"))
 async def edit_select_callback(callback: CallbackQuery):
-    entry_id = callback.data.split(":")[1]
+    if not isinstance(callback.message, Message) or callback.data is None:
+        await callback.answer()
+        return
 
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    message = callback.message
+    entry_id = callback.data.split(":", maxsplit=1)[1]
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
     actions_menu = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=t("edit", lang), callback_data=f"edit_entry:{entry_id}"
+                    text=t("edit", lang),
+                    callback_data=f"edit_entry:{entry_id}",
                 ),
                 InlineKeyboardButton(
-                    text=t("delete", lang), callback_data=f"delete_entry:{entry_id}"
+                    text=t("delete", lang),
+                    callback_data=f"delete_entry:{entry_id}",
                 ),
             ]
         ]
     )
 
-    await callback.message.answer(
-        f"{t('edit_entry_question', lang)} #{entry_id}?", reply_markup=actions_menu
+    await message.answer(
+        f"{t('edit_entry_question', lang)} #{entry_id}?",
+        reply_markup=actions_menu,
     )
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("delete_entry:"))
+@router.callback_query(lambda c: c.data and c.data.startswith("delete_entry:"))
 async def delete_entry_callback(callback: CallbackQuery):
-    entry_id = int(callback.data.split(":")[1])
+    if not isinstance(callback.message, Message) or callback.data is None:
+        await callback.answer()
+        return
 
-    deleted = ExpenseService.delete_entry_by_id(callback.message.chat.id, entry_id)
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    message = callback.message
+
+    try:
+        entry_id = int(callback.data.split(":", maxsplit=1)[1])
+    except (IndexError, ValueError):
+        await callback.answer()
+        return
+
+    deleted = ExpenseService.delete_entry_by_id(message.chat.id, entry_id)
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
     currency = settings["currency"]
 
     if deleted:
-        await callback.message.answer(
-            f"{t('deleted', lang)}:\n{deleted['name']} — {deleted['amount']} {currency}"
+        await message.answer(
+            f"{t('deleted', lang)}:\n"
+            f"{deleted['name']} — {deleted['amount']} {currency}"
         )
     else:
-        await callback.message.answer(t("entry_not_found", lang))
+        await message.answer(t("entry_not_found", lang))
 
     await callback.answer()
 
 
-@router.callback_query(lambda c: c.data.startswith("edit_entry:"))
-async def edit_entry_callback(callback: CallbackQuery, state: FSMContext):
-    entry_id = int(callback.data.split(":")[1])
+@router.callback_query(lambda c: c.data and c.data.startswith("edit_entry:"))
+async def edit_entry_callback(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
+    if not isinstance(callback.message, Message) or callback.data is None:
+        await callback.answer()
+        return
 
-    settings = SettingsService.get_user_settings(callback.message.chat.id)
+    message = callback.message
+
+    try:
+        entry_id = int(callback.data.split(":", maxsplit=1)[1])
+    except (IndexError, ValueError):
+        await callback.answer()
+        return
+
+    settings = SettingsService.get_user_settings(message.chat.id)
     lang = settings["language"]
 
     await state.update_data(entry_id=entry_id)
-
-    await callback.message.answer(t("send_new_value_example", lang))
-
+    await message.answer(t("send_new_value_example", lang))
     await state.set_state(EditEntry.waiting_for_new_value)
     await callback.answer()
 
@@ -81,7 +111,13 @@ async def process_new_entry_value(message: Message, state: FSMContext):
     lang = settings["language"]
     currency = settings["currency"]
 
-    parts = message.text.rsplit(" ", 1)
+    text = message.text
+
+    if text is None:
+        await message.answer(t("wrong_edit_format", lang))
+        return
+
+    parts = text.rsplit(" ", 1)
 
     if len(parts) != 2:
         await message.answer(t("wrong_edit_format", lang))

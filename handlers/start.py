@@ -14,7 +14,7 @@ async def start_handler(message: Message):
 
     chat_id = message.chat.id
 
-    telegram_lang = message.from_user.language_code
+    telegram_lang = message.from_user.language_code if message.from_user else None
     detected_lang = detect_language(telegram_lang)
 
     SettingsService.ensure_user_settings(chat_id, language=detected_lang)
