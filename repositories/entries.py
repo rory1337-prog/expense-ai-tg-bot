@@ -194,3 +194,83 @@ class EntryRepository:
             )
 
             return session.execute(stmt).scalar() or 0
+
+    @staticmethod
+    def get_category_spending_for_period(
+        chat_id: str,
+        category: str,
+        period: str,
+    ):
+        bounds = EntryRepository._get_period_bounds(period)
+
+        if bounds is None:
+            return 0
+
+        start, end = bounds
+
+        with SessionLocal() as session:
+            stmt = select(func.sum(Entry.amount)).where(
+                Entry.chat_id == str(chat_id),
+                Entry.type == "expense",
+                func.lower(Entry.category) == category.strip().lower(),
+                Entry.created_at >= start,
+                Entry.created_at < end,
+            )
+
+            return session.execute(stmt).scalar() or 0
+
+    @staticmethod
+    def get_top_category_for_period(chat_id: str, period: str):
+        bounds = EntryRepository._get_period_bounds(period)
+
+        if bounds is None:
+            return None
+
+        start, end = bounds
+
+        with SessionLocal() as session:
+            stmt = (
+                select(
+                    Entry.category,
+                    func.sum(Entry.amount).label("total"),
+                )
+                .where(
+                    Entry.chat_id == str(chat_id),
+                    Entry.type == "expense",
+                    Entry.created_at >= start,
+                    Entry.created_at < end,
+                )
+                .group_by(Entry.category)
+                .order_by(func.sum(Entry.amount).desc())
+                .limit(1)
+            )
+
+            return session.execute(stmt).first()
+
+    @staticmethod
+    def get_biggest_expenses_for_period(
+        chat_id: str,
+        period: str,
+        limit: int = 5,
+    ):
+        bounds = EntryRepository._get_period_bounds(period)
+
+        if bounds is None:
+            return []
+
+        start, end = bounds
+
+        with SessionLocal() as session:
+            stmt = (
+                select(Entry)
+                .where(
+                    Entry.chat_id == str(chat_id),
+                    Entry.type == "expense",
+                    Entry.created_at >= start,
+                    Entry.created_at < end,
+                )
+                .order_by(Entry.amount.desc(), Entry.id.desc())
+                .limit(limit)
+            )
+
+            return session.execute(stmt).scalars().all()
