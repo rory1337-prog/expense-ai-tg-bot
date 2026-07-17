@@ -1,11 +1,17 @@
-# ExpensesAI
+# 💸 ExpensesAI 
 
-![CI](https://github.com/rory1337-prog/expense-ai-tg-bot/actions/workflows/ci.yml/badge.svg)
-![Python](https://img.shields.io/badge/Python-3.13%2B-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-AI-powered Telegram finance assistant: send a receipt photo, track expenses and income, generate reports, and ask questions about your finances in natural language.
+![Pytest](https://img.shields.io/badge/Tests-52%20Passing-success?style=for-the-badge)
+![mypy](https://img.shields.io/badge/mypy-Passing-blue?style=for-the-badge)
+![Ruff](https://img.shields.io/badge/Ruff-Passing-black?style=for-the-badge)
+![Black](https://img.shields.io/badge/Black-Code%20Style-000000?style=for-the-badge)
+
+> 🚀 **Stable Release v1.0.0**
+>
+>AI-powered Telegram bot for tracking expenses from receipts with natural-language spending analytics.
 
 **Try it** [@checkexpenses_ai_bot](https://t.me/checkexpenses_ai_bot)
 
@@ -19,7 +25,7 @@ AI-powered Telegram finance assistant: send a receipt photo, track expenses and 
 * 📊 Daily, weekly, and monthly reports
 * 🤖 `/ask` analytics: total spending, daily average, category spending, top category, and biggest expenses
 * 🌍 English / Русский / Polski
-* 💱 Currency settings and timezone-aware reporting
+* 💱 Configurable currencies and timezone-aware reporting
 
 ## How it works
 
@@ -34,11 +40,11 @@ Database migrations are managed with Alembic. Dates are stored in UTC and report
 
 | Category | Technologies |
 |----------|--------------|
-| Backend  | Python 3.13, aiogram, SQLAlchemy 2.0 |
+| Backend  | Python 3.13, aiogram 3, SQLAlchemy 2.0 |
 | Database | PostgreSQL 16, Alembic |
-| AI       | OpenAI Vision, Structured Outputs |
+| AI       | OpenAI Vision, Structured Outputs, GPT-4.1-mini |
 | DevOps   | Docker, GitHub Actions, Ubuntu VPS |
-| Quality  | Ruff, Black, mypy, pytest, pre-commit |
+| Quality  | Ruff, Black, mypy, pytest |
 
 ## Quick Start
 
@@ -71,11 +77,24 @@ CI runs the checks against PostgreSQL 16, applies Alembic migrations, runs the t
 
 ## Roadmap
 
-* [x] AI receipt parsing, financial analytics, PostgreSQL, Docker, CI
-* [ ] Budgets and threshold alerts
-* [ ] Monthly comparisons and Telegram charts
-* [ ] Scheduled reports
-* [ ] REST API and web dashboard
+### v1.1
+
+- Budget management
+- Budget alerts
+- Monthly comparison
+- Charts
+
+### v1.2
+
+- FastAPI REST API
+- Redis
+- Celery
+
+### v2.0
+
+- Web Dashboard
+- Multi-user API
+- OCR Pipeline improvements
 
 ## License
 
