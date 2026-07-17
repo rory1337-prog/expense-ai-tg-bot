@@ -4,6 +4,7 @@ from sqlalchemy import DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.session import Base
+from services.time_service import TimeService
 
 
 class Entry(Base):
@@ -15,8 +16,10 @@ class Entry(Base):
     amount: Mapped[float] = mapped_column(Float, nullable=False)
     category: Mapped[str] = mapped_column(String, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
-    created_at: Mapped[str] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=TimeService.utc_now_naive,
+        nullable=False,
     )
 
 
