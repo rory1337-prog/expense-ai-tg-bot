@@ -67,7 +67,7 @@ async def handle_finance_question(message: Message, question: str):
             text = f"Biggest expenses during {result['period']}:\n\n" + "\n".join(lines)
 
     elif result["intent"] == "average_daily_spending":
-        average = AnalyticsService.get_avarage_daily_spending(
+        average = AnalyticsService.get_average_daily_spending(
             message.chat.id, result["period"]
         )
         text = (

@@ -85,13 +85,14 @@ class AnalyticsService:
         )
 
     @staticmethod
-    def get_avarage_daily_spending(chat_id, period):
+    def get_average_daily_spending(chat_id, period):
         total = AnalyticsService.get_total_spending(chat_id, period)
+        now = datetime.now()
 
         days = {
             "today": 1,
-            "week": 7,
-            "month": 30,
+            "week": min(now.weekday() + 1, 7),
+            "month": now.day,
         }.get(period)
 
         if not days:
