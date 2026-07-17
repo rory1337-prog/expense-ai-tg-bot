@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from uuid import uuid4
 
@@ -9,6 +10,8 @@ from locales import t
 from locales.categories import localize_category
 from services.expense_service import ExpenseService
 from services.settings_service import SettingsService
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -44,25 +47,44 @@ async def photo_handler(message: Message):
 
     await message.answer(t("receipt_received", lang))
 
-    photo = message.photo[-1]
-    file = await message.bot.get_file(photo.file_id)
-
-    file_path = TEMP_DIR / f"{uuid4()}.jpg"
-
-    await message.bot.download_file(file.file_path, destination=file_path)
-
-    entry = await ai_parse_photo(str(file_path))
-
-    file_path.unlink(missing_ok=True)
-
-    if not entry:
+    if not message.photo or message.bot is None:
         await message.answer(t("failed_parse_receipt", lang))
         return
 
-    ok = ExpenseService.save_entry(entry, message.chat.id)
+    file_path = TEMP_DIR / f"{uuid4()}.jpg"
 
-    if ok:
-        await message.answer(build_receipt_response(entry, currency, lang))
+    try:
+        photo = message.photo[-1]
+        file = await message.bot.get_file(photo.file_id)
 
-    else:
-        await message.answer(t("failed_save_receipt", lang))
+        if not file.file_path:
+            await message.answer(t("failed_parse_receipt", lang))
+            return
+
+        await message.bot.download_file(
+            file.file_path,
+            destination=file_path,
+        )
+
+        entry = await ai_parse_photo(str(file_path))
+
+        if not entry:
+            await message.answer(t("failed_parse_receipt", lang))
+            return
+
+        ok = ExpenseService.save_entry(entry, message.chat.id)
+
+        if ok:
+            await message.answer(build_receipt_response(entry, currency, lang))
+        else:
+            await message.answer(t("failed_save_receipt", lang))
+
+    except Exception:
+        logger.exception(
+            "Receipt handler failed for chat_id=%s",
+            message.chat.id,
+        )
+        await message.answer(t("failed_parse_receipt", lang))
+
+    finally:
+        file_path.unlink(missing_ok=True)

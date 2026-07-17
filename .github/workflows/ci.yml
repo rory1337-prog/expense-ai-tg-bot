@@ -65,8 +65,15 @@ jobs:
       - name: Run Alembic migrations
         run: alembic upgrade head
 
-      - name: Run tests
-        run: PYTHONPATH=. pytest -q
+      - name: Run tests with coverage
+        run: |
+          PYTHONPATH=. pytest \
+            --cov=ai \
+            --cov=services \
+            --cov=repositories \
+            --cov-report=term-missing \
+            --cov-fail-under=50 \
+            -q
 
       - name: Build Docker image
         run: docker build -t expensesai-local .
