@@ -34,7 +34,13 @@ async def income_handler(message: Message):
     lang = settings["language"]
     currency = settings["currency"]
 
-    if message.text.lower().strip() in [
+    text = message.text
+
+    if text is None:
+        await message.answer(t("failed_parse_income", lang))
+        return
+
+    if text.lower().strip() in [
         "income",
         "salary",
         "зарплата",
@@ -47,7 +53,7 @@ async def income_handler(message: Message):
         await message.answer(t("send_income_example", lang))
         return
 
-    entry = parse_income(message.text)
+    entry = parse_income(text)
 
     if not entry:
         await message.answer(t("failed_parse_income", lang))
@@ -101,7 +107,15 @@ async def expense_text_handler(message: Message):
     lang = settings["language"]
     currency = settings["currency"]
 
-    entry = parse_expense(message.text)
+    text = message.text
+
+    if text is None:
+
+        await message.answer(t("failed_parse_expense", lang))
+
+        return
+
+    entry = parse_expense(text)
 
     if entry:
         ok = ExpenseService.save_entry(entry, message.chat.id)
@@ -117,10 +131,10 @@ async def expense_text_handler(message: Message):
 
         return
 
-    message_type = await ai_classify_message(message.text)
+    message_type = await ai_classify_message(text)
 
     if message_type == "question":
-        await handle_finance_question(message, message.text)
+        await handle_finance_question(message, text)
         return
 
     if message_type == "income":

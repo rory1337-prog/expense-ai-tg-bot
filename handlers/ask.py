@@ -84,7 +84,13 @@ async def handle_finance_question(message: Message, question: str):
 
 @router.message(F.text.startswith("/ask"))
 async def ask_handler(message: Message):
-    question = message.text.replace("/ask", "").strip()
+    text = message.text
+
+    if text is None:
+        await message.answer("Ask a finance question.")
+        return
+
+    question = text.removeprefix("/ask").strip()
 
     if not question:
         await message.answer("Ask a finance question.")
