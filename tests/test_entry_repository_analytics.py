@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 import pytest
@@ -12,11 +13,16 @@ from repositories.entries import EntryRepository
 
 @pytest.fixture()
 def test_session_factory(tmp_path, monkeypatch):
-    database_path = tmp_path / "analytics_test.db"
-    engine = create_engine(
-        f"sqlite:///{database_path}",
-        connect_args={"check_same_thread": False},
-    )
+    test_database_url = os.getenv("TEST_DATABASE_URL")
+
+    if test_database_url:
+        engine = create_engine(test_database_url)
+    else:
+        database_path = tmp_path / "analytics_test.db"
+        engine = create_engine(
+            f"sqlite:///{database_path}",
+            connect_args={"check_same_thread": False},
+        )
 
     session_factory = sessionmaker(
         bind=engine,
@@ -32,9 +38,16 @@ def test_session_factory(tmp_path, monkeypatch):
         session_factory,
     )
 
+    with session_factory() as session:
+        session.query(Entry).delete()
+        session.commit()
+
     yield session_factory
 
-    Base.metadata.drop_all(bind=engine)
+    with session_factory() as session:
+        session.query(Entry).delete()
+        session.commit()
+
     engine.dispose()
 
 
