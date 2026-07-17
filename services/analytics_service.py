@@ -18,13 +18,17 @@ class AnalyticsService:
 
     @staticmethod
     def get_today_expense(chat_id):
-        today = datetime.now().date().isoformat()
-        return EntryRepository.get_expense_sum_by_date(str(chat_id), today)
+        return EntryRepository.get_expense_sum_for_period(
+            str(chat_id),
+            "today",
+        )
 
     @staticmethod
     def get_month_expense(chat_id):
-        month_start = datetime.now().strftime("%Y-%m-01")
-        return EntryRepository.get_expense_sum_from_date(str(chat_id), month_start)
+        return EntryRepository.get_expense_sum_for_period(
+            str(chat_id),
+            "month",
+        )
 
     @staticmethod
     def get_top_categories(chat_id, limit=3):

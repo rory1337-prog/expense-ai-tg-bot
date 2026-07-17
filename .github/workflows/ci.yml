@@ -53,6 +53,9 @@ jobs:
       - name: Black
         run: black --check .
 
+      - name: Mypy
+        run: mypy config.py db repositories services
+
       - name: Compile Python files
         run: |
           python -m compileall \
