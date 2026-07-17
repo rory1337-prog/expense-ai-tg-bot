@@ -1,9 +1,10 @@
-from datetime import datetime, time, timedelta
+from datetime import date, datetime
 
 from sqlalchemy import case, func, select
 
 from db.models import Entry
 from db.session import SessionLocal
+from services.time_service import TimeService
 
 
 class EntryRepository:
@@ -66,7 +67,7 @@ class EntryRepository:
             }
 
     @staticmethod
-    def get_expense_sum_from_date(chat_id: str, start_date: str):
+    def get_expense_sum_from_date(chat_id: str, start_date: datetime):
         with SessionLocal() as session:
             stmt = select(func.sum(Entry.amount)).where(
                 Entry.chat_id == str(chat_id),
@@ -77,7 +78,7 @@ class EntryRepository:
             return session.execute(stmt).scalar() or 0
 
     @staticmethod
-    def get_expense_sum_by_date(chat_id: str, date_value: str):
+    def get_expense_sum_by_date(chat_id: str, date_value: date):
         with SessionLocal() as session:
             stmt = select(func.sum(Entry.amount)).where(
                 Entry.chat_id == str(chat_id),
@@ -120,38 +121,7 @@ class EntryRepository:
 
     @staticmethod
     def _get_period_bounds(period: str):
-        now = datetime.now()
-        today = now.date()
-
-        if period == "today":
-            start = datetime.combine(today, time.min)
-            end = start + timedelta(days=1)
-
-        elif period == "week":
-            start = datetime.combine(today - timedelta(days=6), time.min)
-            end = datetime.combine(today + timedelta(days=1), time.min)
-
-        elif period == "month":
-            start = datetime.combine(today.replace(day=1), time.min)
-
-            if today.month == 12:
-                next_month = today.replace(
-                    year=today.year + 1,
-                    month=1,
-                    day=1,
-                )
-            else:
-                next_month = today.replace(
-                    month=today.month + 1,
-                    day=1,
-                )
-
-            end = datetime.combine(next_month, time.min)
-
-        else:
-            return None
-
-        return start, end
+        return TimeService.get_period_bounds(period)
 
     @staticmethod
     def get_expenses_for_period(chat_id: str, period: str):

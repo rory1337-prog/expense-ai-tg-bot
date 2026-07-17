@@ -1,6 +1,7 @@
 # ===== IMPORTS =====
 import os
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
@@ -25,3 +26,6 @@ CURRENCY = "PLN"
 # ===== TELEGRAM =====
 TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 TELEGRAM_DOCUMENT_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
+
+APP_TIMEZONE_NAME = os.getenv("APP_TIMEZONE", "Europe/Warsaw")
+APP_TIMEZONE = ZoneInfo(APP_TIMEZONE_NAME)
