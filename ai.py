@@ -18,110 +18,107 @@ async def ai_parse_photo(image_path):
         logger.warning("OPENAI_API_KEY not found")
         return None
 
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
+    try:
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
 
-    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
 
-    # ===== OPENAI REQUEST =====
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        }
 
-    payload = {
-        "model": "gpt-4.1-mini",
-        "input": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": (
-                            "Extract receipt data from this image. "
-                            "Find the final total amount paid for the whole receipt. "
-                            "Do not use item price, subtotal, VAT, discount, or card payment amount unless it is clearly the final total. "
-                            "Also extract all visible products/items if possible. "
-                            "Return only the structured result."
-                        ),
-                    },
-                    {
-                        "type": "input_image",
-                        "image_url": f"data:image/jpeg;base64,{image_base64}",
-                    },
-                ],
-            }
-        ],
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": "expense_receipt",
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": (
-                                "Short receipt name, e.g. "
-                                "'Biedronka receipt' or 'Lidl receipt'. "
-                                "Do not use single item name."
+        payload = {
+            "model": "gpt-4.1-mini",
+            "input": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": (
+                                "Extract receipt data from this image. "
+                                "Find the final total amount paid for the whole receipt. "
+                                "Do not use item price, subtotal, VAT, discount, or card payment amount unless it is clearly the final total. "
+                                "Also extract all visible products/items if possible. "
+                                "Return only the structured result."
                             ),
                         },
-                        "amount": {
-                            "type": "number",
-                            "description": (
-                                "Final total amount paid for the whole receipt."
-                            ),
+                        {
+                            "type": "input_image",
+                            "image_url": f"data:image/jpeg;base64,{image_base64}",
                         },
-                        "category": {
-                            "type": "string",
-                            "enum": [
-                                "food",
-                                "groceries",
-                                "transport",
-                                "shopping",
-                                "health",
-                                "entertainment",
-                                "bills",
-                                "services",
-                                "education",
-                                "other",
-                            ],
-                        },
-                        "items": {
-                            "type": "array",
+                    ],
+                }
+            ],
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "expense_receipt",
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": (
+                                    "Short receipt name, e.g. "
+                                    "'Biedronka receipt' or 'Lidl receipt'. "
+                                    "Do not use single item name."
+                                ),
+                            },
+                            "amount": {
+                                "type": "number",
+                                "description": (
+                                    "Final total amount paid for the whole receipt."
+                                ),
+                            },
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "food",
+                                    "groceries",
+                                    "transport",
+                                    "shopping",
+                                    "health",
+                                    "entertainment",
+                                    "bills",
+                                    "services",
+                                    "education",
+                                    "other",
+                                ],
+                            },
                             "items": {
-                                "type": "object",
-                                "additionalProperties": False,
-                                "properties": {
-                                    "name": {"type": "string"},
-                                    "amount": {"type": "number"},
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "amount": {"type": "number"},
+                                    },
+                                    "required": ["name", "amount"],
                                 },
-                                "required": ["name", "amount"],
                             },
                         },
+                        "required": ["name", "amount", "category", "items"],
                     },
-                    "required": ["name", "amount", "category", "items"],
-                },
-                "strict": True,
-            }
-        },
-    }
+                    "strict": True,
+                }
+            },
+        }
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(
-            "https://api.openai.com/v1/responses", headers=headers, json=payload
-        )
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/responses",
+                headers=headers,
+                json=payload,
+            )
 
-    if response.status_code != 200:
-        logger.error("OpenAI error %s: %s", response.status_code, response.text)
-        return None
+        response.raise_for_status()
+        data = response.json()
 
-    # ===== RESPONSE PARSING =====
-    data = response.json()
-
-    try:
         output_items = data.get("output", [])
         text_output = None
 
@@ -130,6 +127,7 @@ async def ai_parse_photo(image_path):
                 if content.get("type") == "output_text":
                     text_output = content.get("text")
                     break
+
             if text_output:
                 break
 
@@ -138,7 +136,6 @@ async def ai_parse_photo(image_path):
             return None
 
         expense = json.loads(text_output)
-
         expense["name"] = str(expense["name"]).strip()
         expense["amount"] = float(expense["amount"])
 
@@ -161,16 +158,33 @@ async def ai_parse_photo(image_path):
             "education",
             "other",
         }
+
         if expense["category"] not in allowed or expense["category"] == "other":
             expense["category"] = detect_category(expense["name"])
 
         expense["type"] = "expense"
-        expense["created_at"] = datetime.now().replace(microsecond=0).isoformat()
+        expense["created_at"] = datetime.now().replace(microsecond=0)
 
         return expense
 
-    except Exception:
-        logger.exception("AI receipt parsing failed")
+    except httpx.TimeoutException:
+        logger.warning("OpenAI receipt request timed out")
+        return None
+
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "OpenAI receipt error %s: %s",
+            exc.response.status_code,
+            exc.response.text,
+        )
+        return None
+
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+        logger.exception("Invalid receipt response or image file")
+        return None
+
+    except httpx.HTTPError:
+        logger.exception("OpenAI receipt request failed")
         return None
 
 
