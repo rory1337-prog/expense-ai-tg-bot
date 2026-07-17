@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+psycopg2://expenses_user:expenses_password@postgres:5432/expenses_ai
+      DATABASE_URL: postgresql+psycopg2://expenses_user:${POSTGRES_PASSWORD}@postgres:5432/expenses_ai
     depends_on:
       postgres:
         condition: service_healthy
